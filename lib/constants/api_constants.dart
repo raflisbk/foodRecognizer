@@ -4,7 +4,7 @@ class ApiConstants {
   static const String searchEndpoint = '/search.php';
 
   // Gemini API - User should add their own key
-  static const String geminiApiKey = 'AIzaSyBTPoJstho2_1yucB4p7B7R2l5Wz_x1_gw';
+  static const String geminiApiKey = '';
 
   // Model paths
   static const String modelFileName = 'food_classifier.tflite';
