@@ -52,12 +52,12 @@ class MealDetail {
   }
 
   Map<String, dynamic> toJson() => {
-        'idMeal': id,
-        'strMeal': name,
-        'strCategory': category,
-        'strArea': area,
-        'strInstructions': instructions,
-        'strMealThumb': thumbnail,
-        'strYoutube': youtube,
-      };
+    'idMeal': id,
+    'strMeal': name,
+    'strCategory': category,
+    'strArea': area,
+    'strInstructions': instructions,
+    'strMealThumb': thumbnail,
+    'strYoutube': youtube,
+  };
 }

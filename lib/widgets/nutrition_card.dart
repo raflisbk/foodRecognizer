@@ -6,10 +6,7 @@ import '../models/nutrition_info.dart';
 class NutritionCard extends StatelessWidget {
   final NutritionInfo nutritionInfo;
 
-  const NutritionCard({
-    super.key,
-    required this.nutritionInfo,
-  });
+  const NutritionCard({super.key, required this.nutritionInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +55,7 @@ class NutritionCard extends StatelessWidget {
                     children: [
                       const Text(
                         'Per Serving',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       Text(
                         nutritionInfo.servingSize,
@@ -204,11 +198,7 @@ class _NutritionItem extends StatelessWidget {
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

@@ -7,10 +7,7 @@ import '../models/meal_detail.dart';
 class MealCard extends StatefulWidget {
   final MealDetail meal;
 
-  const MealCard({
-    super.key,
-    required this.meal,
-  });
+  const MealCard({super.key, required this.meal});
 
   @override
   State<MealCard> createState() => _MealCardState();
@@ -154,7 +151,9 @@ class _MealCardState extends State<MealCard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentColor.withValues(alpha: 0.1),
+                                color: AppTheme.accentColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -212,7 +211,9 @@ class _MealCardState extends State<MealCard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                color: AppTheme.primaryColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -265,11 +266,7 @@ class _Badge extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _Badge({
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
+  const _Badge({required this.label, required this.icon, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -282,11 +279,7 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: color,
-          ),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
             label,

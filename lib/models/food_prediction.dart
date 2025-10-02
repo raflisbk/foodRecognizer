@@ -10,14 +10,14 @@ class FoodPrediction {
   });
 
   Map<String, dynamic> toJson() => {
-        'label': label,
-        'confidence': confidence,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'label': label,
+    'confidence': confidence,
+    'timestamp': timestamp.toIso8601String(),
+  };
 
   factory FoodPrediction.fromJson(Map<String, dynamic> json) => FoodPrediction(
-        label: json['label'] as String,
-        confidence: (json['confidence'] as num).toDouble(),
-        timestamp: DateTime.parse(json['timestamp'] as String),
-      );
+    label: json['label'] as String,
+    confidence: (json['confidence'] as num).toDouble(),
+    timestamp: DateTime.parse(json['timestamp'] as String),
+  );
 }

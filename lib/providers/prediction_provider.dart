@@ -15,11 +15,11 @@ final geminiServiceProvider = Provider<GeminiService>((ref) {
 
 final predictionProvider =
     StateNotifierProvider<PredictionNotifier, PredictionState>((ref) {
-  return PredictionNotifier(
-    ref.read(mealDbServiceProvider),
-    ref.read(geminiServiceProvider),
-  );
-});
+      return PredictionNotifier(
+        ref.read(mealDbServiceProvider),
+        ref.read(geminiServiceProvider),
+      );
+    });
 
 class PredictionState {
   final bool isLoadingMeal;
@@ -49,7 +49,9 @@ class PredictionState {
       isLoadingMeal: isLoadingMeal ?? this.isLoadingMeal,
       isLoadingNutrition: isLoadingNutrition ?? this.isLoadingNutrition,
       meals: clearMeals ? [] : (meals ?? this.meals),
-      nutritionInfo: clearNutrition ? null : (nutritionInfo ?? this.nutritionInfo),
+      nutritionInfo: clearNutrition
+          ? null
+          : (nutritionInfo ?? this.nutritionInfo),
       error: error,
     );
   }
@@ -61,7 +63,7 @@ class PredictionNotifier extends StateNotifier<PredictionState> {
   final Logger _logger = Logger();
 
   PredictionNotifier(this._mealDbService, this._geminiService)
-      : super(PredictionState());
+    : super(PredictionState());
 
   Future<void> fetchMealInfo(String foodName) async {
     try {
@@ -69,16 +71,10 @@ class PredictionNotifier extends StateNotifier<PredictionState> {
 
       final meals = await _mealDbService.searchMealByName(foodName);
 
-      state = state.copyWith(
-        meals: meals,
-        isLoadingMeal: false,
-      );
+      state = state.copyWith(meals: meals, isLoadingMeal: false);
     } catch (e) {
       _logger.e('Error fetching meal info: $e');
-      state = state.copyWith(
-        isLoadingMeal: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoadingMeal: false, error: e.toString());
     }
   }
 
@@ -94,18 +90,12 @@ class PredictionNotifier extends StateNotifier<PredictionState> {
       );
     } catch (e) {
       _logger.e('Error fetching nutrition info: $e');
-      state = state.copyWith(
-        isLoadingNutrition: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoadingNutrition: false, error: e.toString());
     }
   }
 
   Future<void> fetchAllInfo(String foodName) async {
-    await Future.wait([
-      fetchMealInfo(foodName),
-      fetchNutritionInfo(foodName),
-    ]);
+    await Future.wait([fetchMealInfo(foodName), fetchNutritionInfo(foodName)]);
   }
 
   void clearData() {

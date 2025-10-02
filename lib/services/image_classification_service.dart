@@ -31,10 +31,7 @@ class _InferenceMessage {
   final Uint8List imageBytes;
   final SendPort sendPort;
 
-  _InferenceMessage({
-    required this.imageBytes,
-    required this.sendPort,
-  });
+  _InferenceMessage({required this.imageBytes, required this.sendPort});
 }
 
 // Command untuk isolate
@@ -67,9 +64,16 @@ class ImageClassificationService {
       debugPrint('[FoodRecognizer] Loading food labels...');
 
       // Load labels
-      final labelsData = await rootBundle.loadString('assets/labels/labels.txt');
-      _labels = labelsData.split('\n').where((label) => label.isNotEmpty).toList();
-      debugPrint('[FoodRecognizer] Successfully loaded ${_labels.length} food types');
+      final labelsData = await rootBundle.loadString(
+        'assets/labels/labels.txt',
+      );
+      _labels = labelsData
+          .split('\n')
+          .where((label) => label.isNotEmpty)
+          .toList();
+      debugPrint(
+        '[FoodRecognizer] Successfully loaded ${_labels.length} food types',
+      );
 
       // Set model path - convert asset to file if needed
       if (modelPath != null) {
@@ -79,7 +83,9 @@ class ImageClassificationService {
       } else {
         // CRITICAL FIX: Copy asset model to file system for isolate access
         debugPrint('[FoodRecognizer] Copying asset model to file system...');
-        final modelBytes = await rootBundle.load('assets/models/${ApiConstants.modelFileName}');
+        final modelBytes = await rootBundle.load(
+          'assets/models/${ApiConstants.modelFileName}',
+        );
         final tempDir = await getTemporaryDirectory();
         final modelFile = File('${tempDir.path}/${ApiConstants.modelFileName}');
         await modelFile.writeAsBytes(modelBytes.buffer.asUint8List());
@@ -93,7 +99,9 @@ class ImageClassificationService {
       debugPrint('[FoodRecognizer] Spawning long-lived inference isolate');
       await _setupInferenceIsolate();
 
-      debugPrint('[FoodRecognizer] Food recognition system ready (isolate-powered)');
+      debugPrint(
+        '[FoodRecognizer] Food recognition system ready (isolate-powered)',
+      );
 
       // Print implementation status for verification
       printImplementationStatus();
@@ -124,15 +132,17 @@ class ImageClassificationService {
 
     // Initialize model in isolate
     final initReceivePort = ReceivePort();
-    _isolateSendPort!.send(_IsolateCommand(
-      _IsolateMessageType.initialize,
-      _InitializeMessage(
-        modelPath: _currentModelPath!,
-        isAssetModel: _isAssetModel,
-        labels: _labels,
-        sendPort: initReceivePort.sendPort,
+    _isolateSendPort!.send(
+      _IsolateCommand(
+        _IsolateMessageType.initialize,
+        _InitializeMessage(
+          modelPath: _currentModelPath!,
+          isAssetModel: _isAssetModel,
+          labels: _labels,
+          sendPort: initReceivePort.sendPort,
+        ),
       ),
-    ));
+    );
 
     // Wait for initialization complete
     final initResult = await initReceivePort.first;
@@ -156,19 +166,23 @@ class ImageClassificationService {
       final inferenceReceivePort = ReceivePort();
 
       // Send inference request to isolate
-      _isolateSendPort!.send(_IsolateCommand(
-        _IsolateMessageType.inference,
-        _InferenceMessage(
-          imageBytes: imageBytes,
-          sendPort: inferenceReceivePort.sendPort,
+      _isolateSendPort!.send(
+        _IsolateCommand(
+          _IsolateMessageType.inference,
+          _InferenceMessage(
+            imageBytes: imageBytes,
+            sendPort: inferenceReceivePort.sendPort,
+          ),
         ),
-      ));
+      );
 
       // Wait for result
       final result = await inferenceReceivePort.first;
 
       if (result is FoodPrediction) {
-        debugPrint('[FoodRecognizer] Analysis complete: ${result.label} (${(result.confidence * 100).toStringAsFixed(1)}%)');
+        debugPrint(
+          '[FoodRecognizer] Analysis complete: ${result.label} (${(result.confidence * 100).toStringAsFixed(1)}%)',
+        );
         return result;
       } else if (result is String) {
         debugPrint('[FoodRecognizer] Analysis failed: $result');
@@ -246,9 +260,15 @@ class ImageClassificationService {
             // Prepare output buffer
             dynamic output;
             if (isQuantized!) {
-              output = List.filled(1 * numClasses!, 0).reshape([1, numClasses!]);
+              output = List.filled(
+                1 * numClasses!,
+                0,
+              ).reshape([1, numClasses!]);
             } else {
-              output = List.filled(1 * numClasses!, 0.0).reshape([1, numClasses!]);
+              output = List.filled(
+                1 * numClasses!,
+                0.0,
+              ).reshape([1, numClasses!]);
             }
 
             // Run inference
@@ -258,7 +278,9 @@ class ImageClassificationService {
             List<double> predictions;
             if (isQuantized!) {
               final quantizedOutput = output[0] as List<int>;
-              predictions = quantizedOutput.map((q) => (q - zeroPoint!) * scale!).toList();
+              predictions = quantizedOutput
+                  .map((q) => (q - zeroPoint!) * scale!)
+                  .toList();
             } else {
               predictions = output[0] as List<double>;
             }
@@ -277,7 +299,9 @@ class ImageClassificationService {
             FoodPrediction prediction;
             if (maxConfidence < ApiConstants.confidenceThreshold) {
               prediction = FoodPrediction(
-                label: labels!.length > maxIndex ? labels![maxIndex] : 'Unknown',
+                label: labels!.length > maxIndex
+                    ? labels![maxIndex]
+                    : 'Unknown',
                 confidence: -maxConfidence,
                 timestamp: DateTime.now(),
               );
@@ -313,7 +337,6 @@ class ImageClassificationService {
     });
   }
 
-
   static List<List<List<List<int>>>> _preprocessImage(img.Image image) {
     // Resize to model input size
     final resized = img.copyResize(
@@ -327,17 +350,10 @@ class ImageClassificationService {
       1,
       (index) => List.generate(
         ApiConstants.inputSize,
-        (y) => List.generate(
-          ApiConstants.inputSize,
-          (x) {
-            final pixel = resized.getPixel(x, y);
-            return [
-              pixel.r.toInt(),
-              pixel.g.toInt(),
-              pixel.b.toInt(),
-            ];
-          },
-        ),
+        (y) => List.generate(ApiConstants.inputSize, (x) {
+          final pixel = resized.getPixel(x, y);
+          return [pixel.r.toInt(), pixel.g.toInt(), pixel.b.toInt()];
+        }),
       ),
     );
 
@@ -355,16 +371,23 @@ class ImageClassificationService {
   }
 
   // Debug methods untuk verifikasi isolate
-  bool get isIsolateActive => _isolateSendPort != null && _inferenceIsolate != null;
+  bool get isIsolateActive =>
+      _isolateSendPort != null && _inferenceIsolate != null;
 
   String getImplementationInfo() {
     final buffer = StringBuffer();
     buffer.writeln('=== ML Inference Implementation Info ===');
-    buffer.writeln('Isolate Status: ${isIsolateActive ? "ACTIVE (Running in Background)" : "INACTIVE (Main Thread)"}');
-    buffer.writeln('Model Source: ${_isAssetModel ? "Local Assets" : "Firebase ML"}');
+    buffer.writeln(
+      'Isolate Status: ${isIsolateActive ? "ACTIVE (Running in Background)" : "INACTIVE (Main Thread)"}',
+    );
+    buffer.writeln(
+      'Model Source: ${_isAssetModel ? "Local Assets" : "Firebase ML"}',
+    );
     buffer.writeln('Model Path: ${_currentModelPath ?? "Not loaded"}');
     buffer.writeln('Labels Loaded: ${_labels.length} food types');
-    buffer.writeln('Performance: ${isIsolateActive ? "Optimized (No UI Freeze)" : "Not Optimized (May Freeze UI)"}');
+    buffer.writeln(
+      'Performance: ${isIsolateActive ? "Optimized (No UI Freeze)" : "Not Optimized (May Freeze UI)"}',
+    );
     buffer.writeln('========================================');
     return buffer.toString();
   }
@@ -376,7 +399,9 @@ class ImageClassificationService {
   void dispose() {
     // Dispose isolate
     if (_isolateSendPort != null) {
-      _isolateSendPort!.send(_IsolateCommand(_IsolateMessageType.dispose, null));
+      _isolateSendPort!.send(
+        _IsolateCommand(_IsolateMessageType.dispose, null),
+      );
     }
     _inferenceIsolate?.kill(priority: Isolate.immediate);
     _receivePort?.close();

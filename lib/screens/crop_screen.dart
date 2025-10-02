@@ -7,10 +7,7 @@ import '../constants/app_theme.dart';
 class CropScreen extends StatefulWidget {
   final File imageFile;
 
-  const CropScreen({
-    super.key,
-    required this.imageFile,
-  });
+  const CropScreen({super.key, required this.imageFile});
 
   @override
   State<CropScreen> createState() => _CropScreenState();
@@ -79,7 +76,7 @@ class _CropScreenState extends State<CropScreen> {
             toolbarTitle: 'Crop Image',
             toolbarColor: AppTheme.primaryColor,
             toolbarWidgetColor: Colors.white,
-            statusBarColor: AppTheme.primaryColor,
+            statusBarLight: false,
             activeControlsWidgetColor: AppTheme.primaryColor,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
@@ -87,7 +84,7 @@ class _CropScreenState extends State<CropScreen> {
             cropFrameColor: AppTheme.primaryColor,
             cropGridColor: Colors.white,
             backgroundColor: Colors.black,
-            dimmedLayerColor: Colors.black.withOpacity(0.8),
+            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
             cropFrameStrokeWidth: 3,
             cropGridStrokeWidth: 1,
             showCropGrid: true,
@@ -151,7 +148,7 @@ class _CropScreenState extends State<CropScreen> {
                 color: AppTheme.primaryColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -175,11 +172,7 @@ class _CropScreenState extends State<CropScreen> {
                         ),
                         child: const Row(
                           children: [
-                            Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 24,
-                            ),
+                            Icon(Icons.close, color: Colors.white, size: 24),
                             SizedBox(width: 8),
                             Text(
                               'Cancel',
@@ -239,17 +232,11 @@ class _CropScreenState extends State<CropScreen> {
                           SizedBox(height: 16),
                           Text(
                             'Opening crop editor...',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ],
                       )
-                    : Image.file(
-                        widget.imageFile,
-                        fit: BoxFit.contain,
-                      ),
+                    : Image.file(widget.imageFile, fit: BoxFit.contain),
               ),
             ),
 
@@ -258,10 +245,7 @@ class _CropScreenState extends State<CropScreen> {
               padding: const EdgeInsets.all(16),
               child: const Text(
                 'Crop tool will open automatically',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ),

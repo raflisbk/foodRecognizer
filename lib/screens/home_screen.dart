@@ -22,7 +22,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Use Future.microtask to defer initialization until after widget tree is built
     Future.microtask(() async {
       try {
-        await ref.read(classificationProvider.notifier).initialize(useFirebaseModel: true);
+        await ref
+            .read(classificationProvider.notifier)
+            .initialize(useFirebaseModel: true);
         debugPrint('[HomeScreen] ML model initialization complete');
       } catch (e) {
         debugPrint('[HomeScreen] ML model initialization failed: $e');
@@ -45,9 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ),
+              const CircularProgressIndicator(color: AppTheme.primaryColor),
               const SizedBox(height: 16),
               Text(
                 message,
@@ -68,9 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
             Icon(Icons.error_outline, color: AppTheme.primaryColor),
@@ -91,12 +89,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.surfaceGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.surfaceGradient),
         child: Stack(
           children: [
             // Decorative background graphics
@@ -246,140 +241,156 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SafeArea(
               child: Column(
                 children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: FadeInDown(
-                  duration: const Duration(milliseconds: 600),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 180,
-                        height: 180,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryColor.withValues(alpha: 0.2),
-                              blurRadius: 24,
-                              offset: const Offset(0, 12),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: FadeInDown(
+                      duration: const Duration(milliseconds: 600),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 180,
+                            height: 180,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryColor.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            'assets/animations/splash_icon.png',
-                            fit: BoxFit.contain,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Image.asset(
+                                'assets/animations/splash_icon.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Recognize your food with AI',
+                            style: AppTheme.headlineMedium.copyWith(
+                              color: AppTheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        // Gallery button
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 200),
+                          child: _ModernActionButton(
+                            icon: Icons.photo_library_rounded,
+                            label: 'Choose from Gallery',
+                            isPrimary: true,
+                            onTap: () async {
+                              if (!context.mounted) return;
+                              _showLoadingDialog(context, 'Opening gallery...');
+                              await ref
+                                  .read(cameraProvider.notifier)
+                                  .pickImageFromGallery();
+                              if (!context.mounted) return;
+                              Navigator.pop(context); // Close loading
+                              if (ref.read(cameraProvider).capturedImage !=
+                                  null) {
+                                if (!context.mounted) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CameraScreen(),
+                                  ),
+                                );
+                              } else if (ref.read(cameraProvider).error !=
+                                  null) {
+                                if (!context.mounted) return;
+                                _showErrorDialog(
+                                  context,
+                                  ref.read(cameraProvider).error!,
+                                );
+                              }
+                            },
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Recognize your food with AI',
-                        style: AppTheme.headlineMedium.copyWith(
-                          color: AppTheme.onSurface,
+                        const SizedBox(height: 12),
+
+                        // Camera button
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 300),
+                          child: _ModernActionButton(
+                            icon: Icons.camera_alt_rounded,
+                            label: 'Take Photo',
+                            isPrimary: false,
+                            onTap: () async {
+                              if (!context.mounted) return;
+                              _showLoadingDialog(context, 'Opening camera...');
+                              await ref
+                                  .read(cameraProvider.notifier)
+                                  .pickImageFromCamera();
+                              if (!context.mounted) return;
+                              Navigator.pop(context); // Close loading
+                              if (ref.read(cameraProvider).capturedImage !=
+                                  null) {
+                                if (!context.mounted) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CameraScreen(),
+                                  ),
+                                );
+                              } else if (ref.read(cameraProvider).error !=
+                                  null) {
+                                if (!context.mounted) return;
+                                _showErrorDialog(
+                                  context,
+                                  ref.read(cameraProvider).error!,
+                                );
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+
+                        // Live camera button
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 400),
+                          child: _ModernActionButton(
+                            icon: Icons.videocam_rounded,
+                            label: 'Live Detection',
+                            isTertiary: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CameraStreamScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
-
-              const Spacer(),
-
-              // Action buttons
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    // Gallery button
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 200),
-                      child: _ModernActionButton(
-                        icon: Icons.photo_library_rounded,
-                        label: 'Choose from Gallery',
-                        isPrimary: true,
-                        onTap: () async {
-                          if (!context.mounted) return;
-                          _showLoadingDialog(context, 'Opening gallery...');
-                          await ref.read(cameraProvider.notifier).pickImageFromGallery();
-                          if (!context.mounted) return;
-                          Navigator.pop(context); // Close loading
-                          if (ref.read(cameraProvider).capturedImage != null) {
-                            if (!context.mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CameraScreen(),
-                              ),
-                            );
-                          } else if (ref.read(cameraProvider).error != null) {
-                            if (!context.mounted) return;
-                            _showErrorDialog(context, ref.read(cameraProvider).error!);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Camera button
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 300),
-                      child: _ModernActionButton(
-                        icon: Icons.camera_alt_rounded,
-                        label: 'Take Photo',
-                        isPrimary: false,
-                        onTap: () async {
-                          if (!context.mounted) return;
-                          _showLoadingDialog(context, 'Opening camera...');
-                          await ref.read(cameraProvider.notifier).pickImageFromCamera();
-                          if (!context.mounted) return;
-                          Navigator.pop(context); // Close loading
-                          if (ref.read(cameraProvider).capturedImage != null) {
-                            if (!context.mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CameraScreen(),
-                              ),
-                            );
-                          } else if (ref.read(cameraProvider).error != null) {
-                            if (!context.mounted) return;
-                            _showErrorDialog(context, ref.read(cameraProvider).error!);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Live camera button
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 400),
-                      child: _ModernActionButton(
-                        icon: Icons.videocam_rounded,
-                        label: 'Live Detection',
-                        isTertiary: true,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const CameraStreamScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
+            ),
           ],
         ),
       ),

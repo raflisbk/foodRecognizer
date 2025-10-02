@@ -113,9 +113,7 @@ class AppTheme {
         elevation: 1,
         color: surfaceColor,
         surfaceTintColor: primaryColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -167,9 +165,7 @@ class AppTheme {
         backgroundColor: secondaryContainer,
         labelStyle: const TextStyle(color: onSecondary),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       dividerTheme: const DividerThemeData(
         color: outlineVariant,
@@ -223,9 +219,7 @@ class AppTheme {
         elevation: 1,
         color: const Color(0xFF313033),
         surfaceTintColor: const Color(0xFFD0BCFF),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }

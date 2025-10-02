@@ -64,9 +64,15 @@ class CameraScreen extends ConsumerWidget {
                             key: ValueKey(cameraState.capturedImage!.path),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
-                              debugPrint('[CameraScreen] Error loading image: $error');
+                              debugPrint(
+                                '[CameraScreen] Error loading image: $error',
+                              );
                               return const Center(
-                                child: Icon(Icons.error, color: Colors.red, size: 48),
+                                child: Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                  size: 48,
+                                ),
                               );
                             },
                           ),
@@ -102,7 +108,8 @@ class CameraScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Show analyzing indicator only during inference (not during model loading)
-                  if (classificationState.isLoading && classificationState.isInitialized)
+                  if (classificationState.isLoading &&
+                      classificationState.isInitialized)
                     FadeIn(
                       child: Column(
                         children: [
@@ -156,16 +163,20 @@ class CameraScreen extends ConsumerWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: (cameraState.capturedImage != null &&
-                                   classificationState.isInitialized &&
-                                   !classificationState.isLoading)
+                        onPressed:
+                            (cameraState.capturedImage != null &&
+                                classificationState.isInitialized &&
+                                !classificationState.isLoading)
                             ? () async {
                                 await ref
                                     .read(classificationProvider.notifier)
                                     .classifyImage(cameraState.capturedImage!);
 
                                 if (context.mounted &&
-                                    ref.read(classificationProvider).prediction != null) {
+                                    ref
+                                            .read(classificationProvider)
+                                            .prediction !=
+                                        null) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -189,7 +200,9 @@ class CameraScreen extends ConsumerWidget {
                           ),
                           elevation: 4,
                         ),
-                        child: classificationState.isLoading && classificationState.isInitialized
+                        child:
+                            classificationState.isLoading &&
+                                classificationState.isInitialized
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,

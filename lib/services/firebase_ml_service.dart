@@ -33,7 +33,9 @@ class FirebaseMLService {
       _logger.i('[FirebaseML] Model file path: ${model.file.path}');
       return model.file.path;
     } catch (e) {
-      _logger.e('[FirebaseML] ERROR: Failed to download model from Firebase - $e');
+      _logger.e(
+        '[FirebaseML] ERROR: Failed to download model from Firebase - $e',
+      );
       return null;
     }
   }
@@ -42,7 +44,8 @@ class FirebaseMLService {
     try {
       // Note: deleteModel method may not be available in some versions
       // Alternative: manually delete the model file
-      final models = await FirebaseModelDownloader.instance.listDownloadedModels();
+      final models = await FirebaseModelDownloader.instance
+          .listDownloadedModels();
       final targetModel = models.firstWhere(
         (model) => model.name == ApiConstants.firebaseModelName,
         orElse: () => throw Exception('Model not found'),
@@ -64,7 +67,8 @@ class FirebaseMLService {
 
   Future<List<FirebaseCustomModel>> listDownloadedModels() async {
     try {
-      final models = await FirebaseModelDownloader.instance.listDownloadedModels();
+      final models = await FirebaseModelDownloader.instance
+          .listDownloadedModels();
       _logger.i('Found ${models.length} downloaded models');
       return models;
     } catch (e) {
@@ -76,7 +80,9 @@ class FirebaseMLService {
   Future<bool> isModelDownloaded() async {
     try {
       final models = await listDownloadedModels();
-      return models.any((model) => model.name == ApiConstants.firebaseModelName);
+      return models.any(
+        (model) => model.name == ApiConstants.firebaseModelName,
+      );
     } catch (e) {
       return false;
     }

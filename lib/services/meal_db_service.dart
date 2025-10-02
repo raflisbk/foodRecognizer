@@ -5,11 +5,13 @@ import '../models/meal_detail.dart';
 
 class MealDbService {
   static final Logger _logger = Logger();
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: ApiConstants.mealDbBaseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.mealDbBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
 
   // Singleton pattern
   static final MealDbService _instance = MealDbService._internal();
@@ -52,8 +54,12 @@ class MealDbService {
 
           // Sort by relevance: prioritize meals that contain more keywords from the search
           final sortedMeals = _sortByRelevance(mealList, name);
-          _logger.i('[MealDB] Step 1 SUCCESS: Found ${sortedMeals.length} meals with full name');
-          _logger.i('[MealDB] Top result (most relevant): ${sortedMeals.first.name}');
+          _logger.i(
+            '[MealDB] Step 1 SUCCESS: Found ${sortedMeals.length} meals with full name',
+          );
+          _logger.i(
+            '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
+          );
 
           // Log top 3 results if available
           if (sortedMeals.length > 1) {
@@ -72,7 +78,8 @@ class MealDbService {
       _logger.i('[MealDB] Step 2: Searching with individual words from: $name');
 
       final searchWords = name.toLowerCase().split(' ');
-      final allMeals = <String, MealDetail>{}; // Use Map to avoid duplicates by meal ID
+      final allMeals =
+          <String, MealDetail>{}; // Use Map to avoid duplicates by meal ID
 
       for (var word in searchWords) {
         if (word.length < 3) continue; // Skip very short words
@@ -90,10 +97,15 @@ class MealDbService {
 
             if (meals != null && meals.isNotEmpty) {
               for (var mealJson in meals) {
-                final meal = MealDetail.fromJson(mealJson as Map<String, dynamic>);
-                allMeals[meal.id] = meal; // Add to map, automatically handles duplicates
+                final meal = MealDetail.fromJson(
+                  mealJson as Map<String, dynamic>,
+                );
+                allMeals[meal.id] =
+                    meal; // Add to map, automatically handles duplicates
               }
-              _logger.i('[MealDB] Step 2: Found ${meals.length} meals with word "$word"');
+              _logger.i(
+                '[MealDB] Step 2: Found ${meals.length} meals with word "$word"',
+              );
             }
           }
         } catch (e) {
@@ -106,8 +118,12 @@ class MealDbService {
         final mealList = allMeals.values.toList();
         // Sort by relevance to the original search term
         final sortedMeals = _sortByRelevance(mealList, name);
-        _logger.i('[MealDB] Step 2 SUCCESS: Found total ${sortedMeals.length} unique meals');
-        _logger.i('[MealDB] Top result (most relevant): ${sortedMeals.first.name}');
+        _logger.i(
+          '[MealDB] Step 2 SUCCESS: Found total ${sortedMeals.length} unique meals',
+        );
+        _logger.i(
+          '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
+        );
 
         // Log top 3 results if available
         if (sortedMeals.length > 1) {
@@ -117,7 +133,9 @@ class MealDbService {
           }
         }
 
-        return sortedMeals.take(5).toList(); // Return top 5 most relevant, sorted by score
+        return sortedMeals
+            .take(5)
+            .toList(); // Return top 5 most relevant, sorted by score
       }
 
       // Step 3: Final fallback with main ingredient keyword
@@ -138,12 +156,18 @@ class MealDbService {
 
           if (meals != null && meals.isNotEmpty) {
             final mealList = meals
-                .map((meal) => MealDetail.fromJson(meal as Map<String, dynamic>))
+                .map(
+                  (meal) => MealDetail.fromJson(meal as Map<String, dynamic>),
+                )
                 .toList();
 
             final sortedMeals = _sortByRelevance(mealList, name);
-            _logger.i('[MealDB] Step 3 SUCCESS: Found ${sortedMeals.length} meals with main ingredient');
-            _logger.i('[MealDB] Top result (most relevant): ${sortedMeals.first.name}');
+            _logger.i(
+              '[MealDB] Step 3 SUCCESS: Found ${sortedMeals.length} meals with main ingredient',
+            );
+            _logger.i(
+              '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
+            );
 
             // Log top 3 results if available
             if (sortedMeals.length > 1) {
@@ -157,7 +181,9 @@ class MealDbService {
           }
         }
 
-        _logger.w('[MealDB] Step 3 FAILED: No meals found with main ingredient: $bestKeyword');
+        _logger.w(
+          '[MealDB] Step 3 FAILED: No meals found with main ingredient: $bestKeyword',
+        );
       }
 
       _logger.w('[MealDB] FINAL RESULT: No meals found for: $name');
@@ -175,7 +201,11 @@ class MealDbService {
   /// Prioritizes meals that contain more keywords from the original search
   /// Example: "Fried chicken" will match "Kentucky Fried Chicken" with high score
   List<MealDetail> _sortByRelevance(List<MealDetail> meals, String searchTerm) {
-    final searchWords = searchTerm.toLowerCase().split(' ').where((w) => w.length >= 3).toList();
+    final searchWords = searchTerm
+        .toLowerCase()
+        .split(' ')
+        .where((w) => w.length >= 3)
+        .toList();
 
     // Calculate relevance score for each meal
     final mealScores = meals.map((meal) {
@@ -246,24 +276,81 @@ class MealDbService {
 
     // Common cooking methods to skip (less relevant for recipe search)
     final cookingMethods = {
-      'fried', 'grilled', 'baked', 'roasted', 'steamed', 'boiled',
-      'sauteed', 'braised', 'poached', 'smoked', 'crispy', 'spicy',
-      'sweet', 'sour', 'hot', 'cold', 'fresh', 'frozen', 'canned'
+      'fried',
+      'grilled',
+      'baked',
+      'roasted',
+      'steamed',
+      'boiled',
+      'sauteed',
+      'braised',
+      'poached',
+      'smoked',
+      'crispy',
+      'spicy',
+      'sweet',
+      'sour',
+      'hot',
+      'cold',
+      'fresh',
+      'frozen',
+      'canned',
     };
 
     // Common stop words to skip
     final stopWords = {
-      'with', 'and', 'the', 'or', 'in', 'on', 'at', 'to', 'for'
+      'with',
+      'and',
+      'the',
+      'or',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
     };
 
     // Main ingredient keywords (higher priority)
     final mainIngredients = {
-      'chicken', 'beef', 'pork', 'lamb', 'fish', 'salmon', 'tuna',
-      'shrimp', 'prawn', 'lobster', 'crab', 'egg', 'tofu', 'pasta',
-      'rice', 'noodles', 'bread', 'pizza', 'burger', 'sandwich',
-      'salad', 'soup', 'stew', 'curry', 'steak', 'ribs', 'wings',
-      'duck', 'turkey', 'bacon', 'sausage', 'cheese', 'chocolate',
-      'cake', 'pie', 'cookie', 'pancake', 'waffle', 'donut'
+      'chicken',
+      'beef',
+      'pork',
+      'lamb',
+      'fish',
+      'salmon',
+      'tuna',
+      'shrimp',
+      'prawn',
+      'lobster',
+      'crab',
+      'egg',
+      'tofu',
+      'pasta',
+      'rice',
+      'noodles',
+      'bread',
+      'pizza',
+      'burger',
+      'sandwich',
+      'salad',
+      'soup',
+      'stew',
+      'curry',
+      'steak',
+      'ribs',
+      'wings',
+      'duck',
+      'turkey',
+      'bacon',
+      'sausage',
+      'cheese',
+      'chocolate',
+      'cake',
+      'pie',
+      'cookie',
+      'pancake',
+      'waffle',
+      'donut',
     };
 
     // Check if any main ingredient exists (highest priority)
@@ -274,11 +361,14 @@ class MealDbService {
     }
 
     // Filter out cooking methods and stop words, get longest word
-    final relevantWords = words.where((word) =>
-      word.length > 3 &&
-      !cookingMethods.contains(word) &&
-      !stopWords.contains(word)
-    ).toList();
+    final relevantWords = words
+        .where(
+          (word) =>
+              word.length > 3 &&
+              !cookingMethods.contains(word) &&
+              !stopWords.contains(word),
+        )
+        .toList();
 
     if (relevantWords.isEmpty) {
       // Fallback: return longest word if no relevant words found

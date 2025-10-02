@@ -72,9 +72,7 @@ class CameraService {
     }
   }
 
-  Future<void> startImageStream(
-    Function(CameraImage) onImage,
-  ) async {
+  Future<void> startImageStream(Function(CameraImage) onImage) async {
     if (_controller == null || !_controller!.value.isInitialized) {
       _logger.e('Camera not initialized');
       return;
@@ -102,7 +100,9 @@ class CameraService {
         await _controller!.stopImageStream().timeout(
           const Duration(seconds: 2),
           onTimeout: () {
-            _logger.w('[CameraService] WARNING: Stop image stream timed out after 2s');
+            _logger.w(
+              '[CameraService] WARNING: Stop image stream timed out after 2s',
+            );
           },
         );
 

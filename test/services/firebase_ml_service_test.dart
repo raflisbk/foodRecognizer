@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_recognizer/services/firebase_ml_service.dart';
+
 void main() {
   group('FirebaseMLService Tests', () {
     late FirebaseMLService service;
@@ -17,23 +18,23 @@ void main() {
       expect(result, anyOf(isNull, isA<String>()));
     });
 
-    test('downloadModel - should return valid path when model is downloaded', () async {
-      // Act
-      final result = await service.downloadModel();
+    test(
+      'downloadModel - should return valid path when model is downloaded',
+      () async {
+        // Act
+        final result = await service.downloadModel();
 
-      // Assert
-      if (result != null) {
-        expect(result, isNotEmpty);
-        expect(result, contains('.tflite'));
-      }
-    });
+        // Assert
+        if (result != null) {
+          expect(result, isNotEmpty);
+          expect(result, contains('.tflite'));
+        }
+      },
+    );
 
     test('downloadModel - should handle network errors gracefully', () async {
       // Act & Assert
-      expect(
-        () async => await service.downloadModel(),
-        returnsNormally,
-      );
+      expect(() async => await service.downloadModel(), returnsNormally);
     });
 
     test('downloadModel - should handle timeout gracefully', () async {

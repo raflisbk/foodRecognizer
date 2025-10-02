@@ -68,7 +68,9 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
 
       if (bytes != null) {
         // Classify image
-        await ref.read(classificationProvider.notifier).classifyImageBytes(bytes);
+        await ref
+            .read(classificationProvider.notifier)
+            .classifyImageBytes(bytes);
 
         // Check if disposed after async classification
         if (_isDisposed || !mounted) return;
@@ -181,14 +183,10 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
           // Camera preview
           if (cameraService.controller != null &&
               cameraService.controller!.value.isInitialized)
-            Positioned.fill(
-              child: CameraPreview(cameraService.controller!),
-            )
+            Positioned.fill(child: CameraPreview(cameraService.controller!))
           else
             const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryColor),
             ),
 
           // Overlay UI
@@ -202,7 +200,10 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                     children: [
                       FadeInLeft(
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
@@ -210,7 +211,9 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                       FadeInRight(
                         child: IconButton(
                           icon: Icon(
-                            cameraState.isFlashOn ? Icons.flash_on : Icons.flash_off,
+                            cameraState.isFlashOn
+                                ? Icons.flash_on
+                                : Icons.flash_off,
                             color: Colors.white,
                           ),
                           onPressed: () {
@@ -221,7 +224,10 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                       FadeInRight(
                         delay: const Duration(milliseconds: 100),
                         child: IconButton(
-                          icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+                          icon: const Icon(
+                            Icons.flip_camera_ios,
+                            color: Colors.white,
+                          ),
                           onPressed: () {
                             ref.read(cameraProvider.notifier).switchCamera();
                           },
@@ -315,9 +321,10 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                                   child: LinearProgressIndicator(
                                     value: _currentConfidence,
                                     backgroundColor: Colors.white24,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
                                     minHeight: 8,
                                   ),
                                 ),

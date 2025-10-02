@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -16,7 +15,9 @@ final cameraServiceProvider = Provider<CameraService>((ref) {
   return CameraService();
 });
 
-final cameraProvider = StateNotifierProvider<CameraNotifier, CameraState>((ref) {
+final cameraProvider = StateNotifierProvider<CameraNotifier, CameraState>((
+  ref,
+) {
   return CameraNotifier(ref.read(cameraServiceProvider));
 });
 
@@ -103,7 +104,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
           }
         } catch (e) {
           debugPrint('[FoodRecognizer] Error getting device info: $e');
-          state = state.copyWith(error: 'Failed to check Android version. Please try again.');
+          state = state.copyWith(
+            error: 'Failed to check Android version. Please try again.',
+          );
           return;
         }
       } else {
@@ -114,8 +117,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isDenied) {
         state = state.copyWith(
-          error: 'Permission denied. App needs gallery access to select photos. '
-                 'Please allow access when prompted.'
+          error:
+              'Permission denied. App needs gallery access to select photos. '
+              'Please allow access when prompted.',
         );
         debugPrint('[FoodRecognizer] Permission denied');
         return;
@@ -123,8 +127,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isPermanentlyDenied) {
         state = state.copyWith(
-          error: 'Gallery permission permanently denied. Open Settings > Apps > NutriSnap > '
-                 'Permissions > Photos, then enable gallery access.'
+          error:
+              'Gallery permission permanently denied. Open Settings > Apps > NutriSnap > '
+              'Permissions > Photos, then enable gallery access.',
         );
         debugPrint('[FoodRecognizer] Permission permanently denied');
         return;
@@ -132,8 +137,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isRestricted) {
         state = state.copyWith(
-          error: 'Gallery access restricted by system. Check parental control settings or '
-                 'device restrictions.'
+          error:
+              'Gallery access restricted by system. Check parental control settings or '
+              'device restrictions.',
         );
         debugPrint('[FoodRecognizer] Permission restricted');
         return;
@@ -157,18 +163,26 @@ class CameraNotifier extends StateNotifier<CameraState> {
           // Verify file exists and readable
           final file = File(image.path);
           if (!await file.exists()) {
-            state = state.copyWith(error: 'Image file not found. Please select another image.');
+            state = state.copyWith(
+              error: 'Image file not found. Please select another image.',
+            );
             return;
           }
 
           final fileSize = await file.length();
           if (fileSize == 0) {
-            state = state.copyWith(error: 'Image file is empty or corrupted. Please select another image.');
+            state = state.copyWith(
+              error:
+                  'Image file is empty or corrupted. Please select another image.',
+            );
             return;
           }
 
           if (fileSize > 10 * 1024 * 1024) {
-            state = state.copyWith(error: 'Image size too large (max 10MB). Please select a smaller image.');
+            state = state.copyWith(
+              error:
+                  'Image size too large (max 10MB). Please select a smaller image.',
+            );
             return;
           }
 
@@ -191,28 +205,33 @@ class CameraNotifier extends StateNotifier<CameraState> {
         debugPrint('[FoodRecognizer] Error opening gallery: $pickerError');
         if (pickerError.toString().contains('photo_access_denied')) {
           state = state.copyWith(
-            error: 'Gallery access denied by system. Check app permission settings.'
+            error:
+                'Gallery access denied by system. Check app permission settings.',
           );
         } else if (pickerError.toString().contains('No Activity found')) {
           state = state.copyWith(
-            error: 'Gallery app not found. Ensure device has a gallery app installed.'
+            error:
+                'Gallery app not found. Ensure device has a gallery app installed.',
           );
         } else {
           state = state.copyWith(
-            error: 'Failed to open gallery. Error: ${pickerError.toString().substring(0, 50)}...'
+            error:
+                'Failed to open gallery. Error: ${pickerError.toString().substring(0, 50)}...',
           );
         }
       }
     } on PlatformException catch (platformError) {
       debugPrint('[FoodRecognizer] Platform error: $platformError');
       state = state.copyWith(
-        error: 'System error occurred: ${platformError.message ?? "Unknown error"}. '
-               'Please restart the app.'
+        error:
+            'System error occurred: ${platformError.message ?? "Unknown error"}. '
+            'Please restart the app.',
       );
     } catch (e) {
       debugPrint('[FoodRecognizer] Unexpected error: $e');
       state = state.copyWith(
-        error: 'Unexpected error occurred. Please try again or restart the app.'
+        error:
+            'Unexpected error occurred. Please try again or restart the app.',
       );
     }
   }
@@ -223,8 +242,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isDenied) {
         state = state.copyWith(
-          error: 'Permission denied. App needs camera access to take photos. '
-                 'Please allow access when prompted.'
+          error:
+              'Permission denied. App needs camera access to take photos. '
+              'Please allow access when prompted.',
         );
         debugPrint('[FoodRecognizer] Camera permission denied');
         return;
@@ -232,8 +252,9 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isPermanentlyDenied) {
         state = state.copyWith(
-          error: 'Camera permission permanently denied. Open Settings > Apps > NutriSnap > '
-                 'Permissions > Camera, then enable camera access.'
+          error:
+              'Camera permission permanently denied. Open Settings > Apps > NutriSnap > '
+              'Permissions > Camera, then enable camera access.',
         );
         debugPrint('[FoodRecognizer] Camera permission permanently denied');
         return;
@@ -241,14 +262,17 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isRestricted) {
         state = state.copyWith(
-          error: 'Camera access restricted by system. Check parental control settings or '
-                 'device restrictions.'
+          error:
+              'Camera access restricted by system. Check parental control settings or '
+              'device restrictions.',
         );
         debugPrint('[FoodRecognizer] Camera permission restricted');
         return;
       }
 
-      debugPrint('[FoodRecognizer] Camera permission granted, opening camera...');
+      debugPrint(
+        '[FoodRecognizer] Camera permission granted, opening camera...',
+      );
 
       try {
         final XFile? image = await _imagePicker.pickImage(
@@ -258,18 +282,24 @@ class CameraNotifier extends StateNotifier<CameraState> {
         );
 
         if (image != null) {
-          debugPrint('[FoodRecognizer] Photo captured successfully: ${image.path}');
+          debugPrint(
+            '[FoodRecognizer] Photo captured successfully: ${image.path}',
+          );
 
           // Verify file
           final file = File(image.path);
           if (!await file.exists()) {
-            state = state.copyWith(error: 'Photo file not found. Please try again.');
+            state = state.copyWith(
+              error: 'Photo file not found. Please try again.',
+            );
             return;
           }
 
           final fileSize = await file.length();
           if (fileSize == 0) {
-            state = state.copyWith(error: 'Photo file is empty or failed to save. Please try again.');
+            state = state.copyWith(
+              error: 'Photo file is empty or failed to save. Please try again.',
+            );
             return;
           }
 
@@ -292,32 +322,37 @@ class CameraNotifier extends StateNotifier<CameraState> {
         debugPrint('[FoodRecognizer] Error using camera: $cameraError');
         if (cameraError.toString().contains('camera_access_denied')) {
           state = state.copyWith(
-            error: 'Camera access denied by system. Check app permission settings.'
+            error:
+                'Camera access denied by system. Check app permission settings.',
           );
         } else if (cameraError.toString().contains('No Activity found')) {
           state = state.copyWith(
-            error: 'Camera app not found. Ensure device has a camera app installed.'
+            error:
+                'Camera app not found. Ensure device has a camera app installed.',
           );
         } else if (cameraError.toString().contains('already in use')) {
           state = state.copyWith(
-            error: 'Camera is being used by another app. Close that app and try again.'
+            error:
+                'Camera is being used by another app. Close that app and try again.',
           );
         } else {
           state = state.copyWith(
-            error: 'Failed to open camera. Please try again or restart device.'
+            error: 'Failed to open camera. Please try again or restart device.',
           );
         }
       }
     } on PlatformException catch (platformError) {
       debugPrint('[FoodRecognizer] Platform error: $platformError');
       state = state.copyWith(
-        error: 'System error occurred: ${platformError.message ?? "Unknown error"}. '
-               'Please restart the app.'
+        error:
+            'System error occurred: ${platformError.message ?? "Unknown error"}. '
+            'Please restart the app.',
       );
     } catch (e) {
       debugPrint('[FoodRecognizer] Unexpected error: $e');
       state = state.copyWith(
-        error: 'Unexpected error occurred. Please try again or restart the app.'
+        error:
+            'Unexpected error occurred. Please try again or restart the app.',
       );
     }
   }
@@ -358,12 +393,16 @@ class CameraNotifier extends StateNotifier<CameraState> {
             await _analytics.logEvent(
               name: 'image_cropped',
               parameters: {
-                'success': 1, // Firebase Analytics requires num or String, not bool
-                'file_size_kb': (await croppedFile.length() / 1024).toStringAsFixed(2),
+                'success':
+                    1, // Firebase Analytics requires num or String, not bool
+                'file_size_kb': (await croppedFile.length() / 1024)
+                    .toStringAsFixed(2),
               },
             );
           } catch (analyticsError) {
-            debugPrint('[CameraProvider] Analytics logging failed (non-critical): $analyticsError');
+            debugPrint(
+              '[CameraProvider] Analytics logging failed (non-critical): $analyticsError',
+            );
           }
         } else {
           debugPrint('[CameraProvider] Same image returned (no crop applied)');

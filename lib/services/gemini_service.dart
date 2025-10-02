@@ -22,7 +22,8 @@ class GeminiService {
     try {
       _logger.i('[Gemini] Requesting nutrition info for: $foodName');
 
-      final prompt = '''
+      final prompt =
+          '''
 Provide detailed nutritional information for "$foodName" in JSON format.
 The response should ONLY contain a valid JSON object with the following structure:
 {
@@ -95,7 +96,8 @@ Important:
 
   Future<String?> getFoodDescription(String foodName) async {
     try {
-      final prompt = '''
+      final prompt =
+          '''
 Provide a brief, interesting description of "$foodName" in 2-3 sentences.
 Include its origin, key ingredients, or cultural significance.
 Keep it concise and engaging.

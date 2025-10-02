@@ -9,7 +9,9 @@ import 'package:food_recognizer/services/firebase_ml_service.dart';
 import 'package:food_recognizer/models/food_prediction.dart';
 
 @GenerateMocks([ImageClassificationService, FirebaseMLService])
-class MockImageClassificationService extends Mock implements ImageClassificationService {}
+class MockImageClassificationService extends Mock
+    implements ImageClassificationService {}
+
 class MockFirebaseMLService extends Mock implements FirebaseMLService {}
 
 void main() {
@@ -25,7 +27,9 @@ void main() {
 
       container = ProviderContainer(
         overrides: [
-          classificationServiceProvider.overrideWithValue(mockClassificationService),
+          classificationServiceProvider.overrideWithValue(
+            mockClassificationService,
+          ),
           firebaseMLServiceProvider.overrideWithValue(mockFirebaseMLService),
         ],
       );
@@ -47,42 +51,60 @@ void main() {
       expect(state.useFirebaseModel, false);
     });
 
-    test('initialize - should set isLoading to true during initialization', () async {
-      // Arrange
-      when(mockFirebaseMLService.downloadModel()).thenAnswer((_) async => null);
-      when(mockClassificationService.initialize(modelPath: null)).thenAnswer((_) async => {});
+    test(
+      'initialize - should set isLoading to true during initialization',
+      () async {
+        // Arrange
+        when(
+          mockFirebaseMLService.downloadModel(),
+        ).thenAnswer((_) async => null);
+        when(
+          mockClassificationService.initialize(modelPath: null),
+        ).thenAnswer((_) async => {});
 
-      // Act
-      final notifier = container.read(classificationProvider.notifier);
-      final future = notifier.initialize(useFirebaseModel: false);
+        // Act
+        final notifier = container.read(classificationProvider.notifier);
+        final future = notifier.initialize(useFirebaseModel: false);
 
-      // Assert
-      expect(container.read(classificationProvider).isLoading, true);
+        // Assert
+        expect(container.read(classificationProvider).isLoading, true);
 
-      await future;
-    });
+        await future;
+      },
+    );
 
-    test('initialize - should set isInitialized to true after successful initialization', () async {
-      // Arrange
-      when(mockFirebaseMLService.downloadModel()).thenAnswer((_) async => null);
-      when(mockClassificationService.initialize(modelPath: null)).thenAnswer((_) async => {});
+    test(
+      'initialize - should set isInitialized to true after successful initialization',
+      () async {
+        // Arrange
+        when(
+          mockFirebaseMLService.downloadModel(),
+        ).thenAnswer((_) async => null);
+        when(
+          mockClassificationService.initialize(modelPath: null),
+        ).thenAnswer((_) async => {});
 
-      // Act
-      final notifier = container.read(classificationProvider.notifier);
-      await notifier.initialize(useFirebaseModel: false);
+        // Act
+        final notifier = container.read(classificationProvider.notifier);
+        await notifier.initialize(useFirebaseModel: false);
 
-      // Assert
-      final state = container.read(classificationProvider);
-      expect(state.isInitialized, true);
-      expect(state.isLoading, false);
-      expect(state.error, isNull);
-    });
+        // Assert
+        final state = container.read(classificationProvider);
+        expect(state.isInitialized, true);
+        expect(state.isLoading, false);
+        expect(state.error, isNull);
+      },
+    );
 
     test('initialize - should use Firebase model when available', () async {
       // Arrange
       const String modelPath = '/path/to/model.tflite';
-      when(mockFirebaseMLService.downloadModel()).thenAnswer((_) async => modelPath);
-      when(mockClassificationService.initialize(modelPath: modelPath)).thenAnswer((_) async => {});
+      when(
+        mockFirebaseMLService.downloadModel(),
+      ).thenAnswer((_) async => modelPath);
+      when(
+        mockClassificationService.initialize(modelPath: modelPath),
+      ).thenAnswer((_) async => {});
 
       // Act
       final notifier = container.read(classificationProvider.notifier);
@@ -92,14 +114,17 @@ void main() {
       final state = container.read(classificationProvider);
       expect(state.useFirebaseModel, true);
       expect(state.firebaseModelPath, modelPath);
-      verify(mockClassificationService.initialize(modelPath: modelPath)).called(1);
+      verify(
+        mockClassificationService.initialize(modelPath: modelPath),
+      ).called(1);
     });
 
     test('initialize - should handle initialization errors', () async {
       // Arrange
       when(mockFirebaseMLService.downloadModel()).thenAnswer((_) async => null);
-      when(mockClassificationService.initialize(modelPath: null))
-          .thenThrow(Exception('Initialization failed'));
+      when(
+        mockClassificationService.initialize(modelPath: null),
+      ).thenThrow(Exception('Initialization failed'));
 
       // Act
       final notifier = container.read(classificationProvider.notifier);
@@ -111,71 +136,85 @@ void main() {
       expect(state.error, isNotNull);
     });
 
-    test('classifyImageBytes - should set isLoading to true during classification', () async {
-      // Arrange
-      final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
-      when(mockClassificationService.classifyImage(testImage))
-          .thenAnswer((_) async => FoodPrediction(
+    test(
+      'classifyImageBytes - should set isLoading to true during classification',
+      () async {
+        // Arrange
+        final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
+        when(mockClassificationService.classifyImage(testImage)).thenAnswer(
+          (_) async => FoodPrediction(
             label: 'Nasi Goreng',
             confidence: 0.95,
             timestamp: DateTime.now(),
-          ));
+          ),
+        );
 
-      // Act
-      final notifier = container.read(classificationProvider.notifier);
-      final future = notifier.classifyImageBytes(testImage);
+        // Act
+        final notifier = container.read(classificationProvider.notifier);
+        final future = notifier.classifyImageBytes(testImage);
 
-      // Assert
-      expect(container.read(classificationProvider).isLoading, true);
+        // Assert
+        expect(container.read(classificationProvider).isLoading, true);
 
-      await future;
-    });
+        await future;
+      },
+    );
 
-    test('classifyImageBytes - should update prediction on successful classification', () async {
-      // Arrange
-      final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
-      final expectedPrediction = FoodPrediction(
-        label: 'Rendang',
-        confidence: 0.88,
-        timestamp: DateTime.now(),
-      );
-      when(mockClassificationService.classifyImage(testImage))
-          .thenAnswer((_) async => expectedPrediction);
+    test(
+      'classifyImageBytes - should update prediction on successful classification',
+      () async {
+        // Arrange
+        final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
+        final expectedPrediction = FoodPrediction(
+          label: 'Rendang',
+          confidence: 0.88,
+          timestamp: DateTime.now(),
+        );
+        when(
+          mockClassificationService.classifyImage(testImage),
+        ).thenAnswer((_) async => expectedPrediction);
 
-      // Act
-      final notifier = container.read(classificationProvider.notifier);
-      await notifier.classifyImageBytes(testImage);
+        // Act
+        final notifier = container.read(classificationProvider.notifier);
+        await notifier.classifyImageBytes(testImage);
 
-      // Assert
-      final state = container.read(classificationProvider);
-      expect(state.prediction, isNotNull);
-      expect(state.prediction?.label, 'Rendang');
-      expect(state.prediction?.confidence, 0.88);
-      expect(state.isLoading, false);
-      expect(state.error, isNull);
-    });
+        // Assert
+        final state = container.read(classificationProvider);
+        expect(state.prediction, isNotNull);
+        expect(state.prediction?.label, 'Rendang');
+        expect(state.prediction?.confidence, 0.88);
+        expect(state.isLoading, false);
+        expect(state.error, isNull);
+      },
+    );
 
-    test('classifyImageBytes - should set error when classification returns null', () async {
-      // Arrange
-      final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
-      when(mockClassificationService.classifyImage(testImage)).thenAnswer((_) async => null);
+    test(
+      'classifyImageBytes - should set error when classification returns null',
+      () async {
+        // Arrange
+        final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
+        when(
+          mockClassificationService.classifyImage(testImage),
+        ).thenAnswer((_) async => null);
 
-      // Act
-      final notifier = container.read(classificationProvider.notifier);
-      await notifier.classifyImageBytes(testImage);
+        // Act
+        final notifier = container.read(classificationProvider.notifier);
+        await notifier.classifyImageBytes(testImage);
 
-      // Assert
-      final state = container.read(classificationProvider);
-      expect(state.prediction, isNull);
-      expect(state.error, isNotNull);
-      expect(state.isLoading, false);
-    });
+        // Assert
+        final state = container.read(classificationProvider);
+        expect(state.prediction, isNull);
+        expect(state.error, isNotNull);
+        expect(state.isLoading, false);
+      },
+    );
 
     test('classifyImageBytes - should handle classification errors', () async {
       // Arrange
       final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
-      when(mockClassificationService.classifyImage(testImage))
-          .thenThrow(Exception('Classification failed'));
+      when(
+        mockClassificationService.classifyImage(testImage),
+      ).thenThrow(Exception('Classification failed'));
 
       // Act
       final notifier = container.read(classificationProvider.notifier);
@@ -190,12 +229,13 @@ void main() {
     test('clearPrediction - should clear prediction from state', () async {
       // Arrange
       final Uint8List testImage = Uint8List.fromList([1, 2, 3, 4]);
-      when(mockClassificationService.classifyImage(testImage))
-          .thenAnswer((_) async => FoodPrediction(
-            label: 'Sate',
-            confidence: 0.92,
-            timestamp: DateTime.now(),
-          ));
+      when(mockClassificationService.classifyImage(testImage)).thenAnswer(
+        (_) async => FoodPrediction(
+          label: 'Sate',
+          confidence: 0.92,
+          timestamp: DateTime.now(),
+        ),
+      );
 
       final notifier = container.read(classificationProvider.notifier);
       await notifier.classifyImageBytes(testImage);
@@ -211,8 +251,9 @@ void main() {
     test('clearError - should clear error from state', () async {
       // Arrange
       when(mockFirebaseMLService.downloadModel()).thenAnswer((_) async => null);
-      when(mockClassificationService.initialize(modelPath: null))
-          .thenThrow(Exception('Error'));
+      when(
+        mockClassificationService.initialize(modelPath: null),
+      ).thenThrow(Exception('Error'));
 
       final notifier = container.read(classificationProvider.notifier);
       await notifier.initialize(useFirebaseModel: false);

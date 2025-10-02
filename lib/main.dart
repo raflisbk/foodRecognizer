@@ -31,14 +31,18 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
-    debugPrint('[FoodRecognizer] Firebase Crashlytics initialized successfully');
+    debugPrint(
+      '[FoodRecognizer] Firebase Crashlytics initialized successfully',
+    );
 
     // Initialize Firebase Analytics
     FirebaseAnalytics analytics = FirebaseAnalytics.instance;
     await analytics.logAppOpen();
     debugPrint('[FoodRecognizer] Firebase Analytics initialized successfully');
   } catch (e) {
-    debugPrint('[FoodRecognizer] Firebase initialization failed - using local model');
+    debugPrint(
+      '[FoodRecognizer] Firebase initialization failed - using local model',
+    );
   }
 
   // Set preferred orientations
@@ -57,11 +61,7 @@ void main() async {
 
   debugPrint('[NutriSnap] NutriSnap app ready to launch');
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

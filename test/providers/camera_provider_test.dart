@@ -18,9 +18,7 @@ void main() {
       mockCameraService = MockCameraService();
 
       container = ProviderContainer(
-        overrides: [
-          cameraServiceProvider.overrideWithValue(mockCameraService),
-        ],
+        overrides: [cameraServiceProvider.overrideWithValue(mockCameraService)],
       );
     });
 
@@ -40,20 +38,25 @@ void main() {
       expect(state.isFlashOn, false);
     });
 
-    test('initialize - should set isInitialized to true on successful initialization', () async {
-      // Arrange
-      when(mockCameraService.initializeCamera()).thenAnswer((_) async => true);
+    test(
+      'initialize - should set isInitialized to true on successful initialization',
+      () async {
+        // Arrange
+        when(
+          mockCameraService.initializeCamera(),
+        ).thenAnswer((_) async => true);
 
-      // Act
-      final notifier = container.read(cameraProvider.notifier);
-      await notifier.initialize();
+        // Act
+        final notifier = container.read(cameraProvider.notifier);
+        await notifier.initialize();
 
-      // Assert
-      final state = container.read(cameraProvider);
-      expect(state.isInitialized, true);
-      expect(state.error, isNull);
-      verify(mockCameraService.initializeCamera()).called(1);
-    });
+        // Assert
+        final state = container.read(cameraProvider);
+        expect(state.isInitialized, true);
+        expect(state.error, isNull);
+        verify(mockCameraService.initializeCamera()).called(1);
+      },
+    );
 
     test('initialize - should set error on failed initialization', () async {
       // Arrange
@@ -71,7 +74,9 @@ void main() {
 
     test('initialize - should handle initialization errors', () async {
       // Arrange
-      when(mockCameraService.initializeCamera()).thenThrow(Exception('Camera error'));
+      when(
+        mockCameraService.initializeCamera(),
+      ).thenThrow(Exception('Camera error'));
 
       // Act
       final notifier = container.read(cameraProvider.notifier);
@@ -98,22 +103,27 @@ void main() {
       verify(mockCameraService.takePicture()).called(1);
     });
 
-    test('takePicture - should not update capturedImage when result is null', () async {
-      // Arrange
-      when(mockCameraService.takePicture()).thenAnswer((_) async => null);
+    test(
+      'takePicture - should not update capturedImage when result is null',
+      () async {
+        // Arrange
+        when(mockCameraService.takePicture()).thenAnswer((_) async => null);
 
-      // Act
-      final notifier = container.read(cameraProvider.notifier);
-      await notifier.takePicture();
+        // Act
+        final notifier = container.read(cameraProvider.notifier);
+        await notifier.takePicture();
 
-      // Assert
-      final state = container.read(cameraProvider);
-      expect(state.capturedImage, isNull);
-    });
+        // Assert
+        final state = container.read(cameraProvider);
+        expect(state.capturedImage, isNull);
+      },
+    );
 
     test('takePicture - should handle errors', () async {
       // Arrange
-      when(mockCameraService.takePicture()).thenThrow(Exception('Capture error'));
+      when(
+        mockCameraService.takePicture(),
+      ).thenThrow(Exception('Capture error'));
 
       // Act
       final notifier = container.read(cameraProvider.notifier);
@@ -188,6 +198,5 @@ void main() {
       final state = container.read(cameraProvider);
       expect(state.error, isNull);
     });
-
   });
 }

@@ -14,7 +14,9 @@ class _InitializationScreenState extends State<InitializationScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[InitializationScreen] Showing splash screen (model already loaded in main())');
+    debugPrint(
+      '[InitializationScreen] Showing splash screen (model already loaded in main())',
+    );
     // Just show splash screen briefly then navigate
     // Model is already initialized in main.dart before widget tree
     Future.delayed(const Duration(milliseconds: 1500), () {
@@ -50,7 +52,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -125,7 +127,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
                         'This may take a few moments',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                     ),

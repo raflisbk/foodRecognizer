@@ -11,70 +11,63 @@ import 'package:food_recognizer/constants/app_theme.dart';
 
 void main() {
   group('HomeScreen Widget Tests', () {
-    testWidgets('HomeScreen should display app title', (WidgetTester tester) async {
+    testWidgets('HomeScreen should display app title', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
       expect(find.text('Food Recognizer'), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should display logo icon', (WidgetTester tester) async {
+    testWidgets('HomeScreen should display logo icon', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
       expect(find.byIcon(Icons.restaurant_rounded), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should display welcome text', (WidgetTester tester) async {
+    testWidgets('HomeScreen should display welcome text', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
       expect(find.textContaining('Selamat Datang'), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should display instruction text', (WidgetTester tester) async {
+    testWidgets('HomeScreen should display instruction text', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
-      expect(find.textContaining('Ambil atau pilih foto makanan'), findsOneWidget);
+      expect(
+        find.textContaining('Ambil atau pilih foto makanan'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('HomeScreen should have camera button', (WidgetTester tester) async {
+    testWidgets('HomeScreen should have camera button', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
@@ -82,14 +75,12 @@ void main() {
       expect(find.text('Ambil Foto'), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should have gallery button', (WidgetTester tester) async {
+    testWidgets('HomeScreen should have gallery button', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Assert
@@ -97,7 +88,9 @@ void main() {
       expect(find.text('Pilih dari Galeri'), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should show loading state when initializing', (WidgetTester tester) async {
+    testWidgets('HomeScreen should show loading state when initializing', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
         ProviderScope(
@@ -108,9 +101,7 @@ void main() {
               ),
             ),
           ],
-          child: const MaterialApp(
-            home: HomeScreen(),
-          ),
+          child: const MaterialApp(home: HomeScreen()),
         ),
       );
 
@@ -122,33 +113,36 @@ void main() {
       expect(find.textContaining('Mengunduh model'), findsOneWidget);
     });
 
-    testWidgets('HomeScreen should show error state when initialization fails', (WidgetTester tester) async {
-      // Arrange
-      const errorMessage = 'Gagal memuat model AI';
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            classificationProvider.overrideWith(
-              (ref) => _MockClassificationNotifier(
-                ClassificationState(error: errorMessage),
+    testWidgets(
+      'HomeScreen should show error state when initialization fails',
+      (WidgetTester tester) async {
+        // Arrange
+        const errorMessage = 'Gagal memuat model AI';
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              classificationProvider.overrideWith(
+                (ref) => _MockClassificationNotifier(
+                  ClassificationState(error: errorMessage),
+                ),
               ),
-            ),
-          ],
-          child: const MaterialApp(
-            home: HomeScreen(),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
           ),
-        ),
-      );
+        );
 
-      // Act
-      await tester.pump();
+        // Act
+        await tester.pump();
 
-      // Assert
-      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
-      expect(find.textContaining(errorMessage), findsOneWidget);
-    });
+        // Assert
+        expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+        expect(find.textContaining(errorMessage), findsOneWidget);
+      },
+    );
 
-    testWidgets('HomeScreen should use correct theme colors', (WidgetTester tester) async {
+    testWidgets('HomeScreen should use correct theme colors', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         ProviderScope(
@@ -171,14 +165,12 @@ void main() {
       expect(theme.colorScheme.secondary, AppTheme.secondaryColor);
     });
 
-    testWidgets('Camera button should be tappable', (WidgetTester tester) async {
+    testWidgets('Camera button should be tappable', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Act
@@ -192,14 +184,12 @@ void main() {
       expect(tester.widget<FilledButton>(cameraButton).onPressed, isNotNull);
     });
 
-    testWidgets('Gallery button should be tappable', (WidgetTester tester) async {
+    testWidgets('Gallery button should be tappable', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Act
@@ -218,7 +208,7 @@ void main() {
 // Mock ClassificationNotifier for testing
 class _MockClassificationNotifier extends ClassificationNotifier {
   _MockClassificationNotifier(ClassificationState initialState)
-      : super(_MockImageClassificationService(), _MockFirebaseMLService()) {
+    : super(_MockImageClassificationService(), _MockFirebaseMLService()) {
     state = initialState;
   }
 }
@@ -236,6 +226,15 @@ class _MockImageClassificationService implements ImageClassificationService {
 
   @override
   void dispose() {}
+
+  @override
+  bool get isIsolateActive => false;
+
+  @override
+  String getImplementationInfo() => 'Mock implementation';
+
+  @override
+  void printImplementationStatus() {}
 }
 
 class _MockFirebaseMLService implements FirebaseMLService {

@@ -28,7 +28,9 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(predictionProvider.notifier).fetchAllInfo(widget.prediction.label);
+      ref
+          .read(predictionProvider.notifier)
+          .fetchAllInfo(widget.prediction.label);
     });
   }
 
@@ -57,10 +59,7 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                 children: [
                   Hero(
                     tag: 'food_image',
-                    child: Image.file(
-                      widget.imageFile,
-                      fit: BoxFit.cover,
-                    ),
+                    child: Image.file(widget.imageFile, fit: BoxFit.cover),
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -169,12 +168,17 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.error_outline, color: AppTheme.errorColor),
+                                Icon(
+                                  Icons.error_outline,
+                                  color: AppTheme.errorColor,
+                                ),
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     'Nutrition information not available',
-                                    style: TextStyle(color: AppTheme.errorColor),
+                                    style: TextStyle(
+                                      color: AppTheme.errorColor,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -272,7 +276,10 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              Navigator.popUntil(context, (route) => route.isFirst);
+                              Navigator.popUntil(
+                                context,
+                                (route) => route.isFirst,
+                              );
                             },
                             icon: const Icon(Icons.home),
                             label: const Text('Home'),
