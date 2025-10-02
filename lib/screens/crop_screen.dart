@@ -112,7 +112,7 @@ class _CropScreenState extends State<CropScreen> {
         });
 
         if (croppedFile != null) {
-          debugPrint('[CropScreen] ✅ Crop successful!');
+          debugPrint('[CropScreen] Crop successful');
           debugPrint('[CropScreen] Original path: ${widget.imageFile.path}');
           debugPrint('[CropScreen] Cropped path: ${croppedFile.path}');
 
@@ -121,7 +121,7 @@ class _CropScreenState extends State<CropScreen> {
           debugPrint('[CropScreen] Returning cropped file to caller');
           Navigator.pop(context, resultFile);
         } else {
-          debugPrint('[CropScreen] ❌ User cancelled crop, returning original');
+          debugPrint('[CropScreen] User cancelled crop, returning original');
           Navigator.pop(context, widget.imageFile);
         }
       }

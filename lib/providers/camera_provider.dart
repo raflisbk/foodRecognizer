@@ -324,13 +324,13 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
   Future<File?> cropImage(BuildContext context) async {
     if (state.capturedImage == null) {
-      debugPrint('[CameraProvider] ❌ No captured image to crop');
+      debugPrint('[CameraProvider] No captured image to crop');
       return null;
     }
 
     try {
       final originalPath = state.capturedImage!.path;
-      debugPrint('[CameraProvider] 📸 Opening crop editor for: $originalPath');
+      debugPrint('[CameraProvider] Opening crop editor for: $originalPath');
 
       // Navigate ke CropScreen untuk crop image dengan SafeArea yang proper
       final croppedFile = await Navigator.push<File>(
@@ -340,7 +340,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         ),
       );
 
-      debugPrint('[CameraProvider] 🔄 Returned from crop screen');
+      debugPrint('[CameraProvider] Returned from crop screen');
 
       if (croppedFile != null) {
         final croppedPath = croppedFile.path;
@@ -351,7 +351,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         debugPrint('[CameraProvider] Is different: $isDifferent');
 
         if (isDifferent) {
-          debugPrint('[CameraProvider] ✅ Image cropped successfully');
+          debugPrint('[CameraProvider] Image cropped successfully');
 
           // Log analytics event for image cropping (wrapped in try-catch to prevent blocking)
           try {
@@ -363,26 +363,26 @@ class CameraNotifier extends StateNotifier<CameraState> {
               },
             );
           } catch (analyticsError) {
-            debugPrint('[CameraProvider] ⚠️ Analytics logging failed (non-critical): $analyticsError');
+            debugPrint('[CameraProvider] Analytics logging failed (non-critical): $analyticsError');
           }
         } else {
-          debugPrint('[CameraProvider] ℹ️ Same image returned (no crop applied)');
+          debugPrint('[CameraProvider] Same image returned (no crop applied)');
         }
 
         // CRITICAL: Force update state dengan clearImage dulu untuk trigger rebuild
-        debugPrint('[CameraProvider] 🔄 Updating state with cropped image...');
+        debugPrint('[CameraProvider] Updating state with cropped image');
         state = state.copyWith(clearImage: true); // Clear dulu
         await Future.delayed(Duration(milliseconds: 50)); // Small delay
         state = state.copyWith(capturedImage: croppedFile); // Set baru
 
-        debugPrint('[CameraProvider] ✅ State updated successfully');
+        debugPrint('[CameraProvider] State updated successfully');
         return croppedFile;
       } else {
-        debugPrint('[CameraProvider] ❌ Crop canceled (null returned), keeping original');
+        debugPrint('[CameraProvider] Crop canceled, keeping original');
         return state.capturedImage;
       }
     } catch (e) {
-      debugPrint('[CameraProvider] ❌ Error in crop flow: $e');
+      debugPrint('[CameraProvider] Error in crop flow: $e');
       return state.capturedImage;
     }
   }
