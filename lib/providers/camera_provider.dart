@@ -323,10 +323,14 @@ class CameraNotifier extends StateNotifier<CameraState> {
   }
 
   Future<File?> cropImage(BuildContext context) async {
-    if (state.capturedImage == null) return null;
+    if (state.capturedImage == null) {
+      debugPrint('[CameraProvider] ❌ No captured image to crop');
+      return null;
+    }
 
     try {
-      debugPrint('[FoodRecognizer] Opening image crop editor...');
+      final originalPath = state.capturedImage!.path;
+      debugPrint('[CameraProvider] 📸 Opening crop editor for: $originalPath');
 
       // Navigate ke CropScreen untuk crop image dengan SafeArea yang proper
       final croppedFile = await Navigator.push<File>(
@@ -336,23 +340,49 @@ class CameraNotifier extends StateNotifier<CameraState> {
         ),
       );
 
-      if (croppedFile != null && croppedFile.path != state.capturedImage!.path) {
-        debugPrint('[FoodRecognizer] Image cropped successfully');
+      debugPrint('[CameraProvider] 🔄 Returned from crop screen');
 
-        // Log analytics event for image cropping
-        await _analytics.logEvent(
-          name: 'image_cropped',
-          parameters: {'success': true},
-        );
+      if (croppedFile != null) {
+        final croppedPath = croppedFile.path;
+        final isDifferent = croppedPath != originalPath;
 
-        state = state.copyWith(capturedImage: croppedFile);
+        debugPrint('[CameraProvider] Original: $originalPath');
+        debugPrint('[CameraProvider] Cropped:  $croppedPath');
+        debugPrint('[CameraProvider] Is different: $isDifferent');
+
+        if (isDifferent) {
+          debugPrint('[CameraProvider] ✅ Image cropped successfully');
+
+          // Log analytics event for image cropping (wrapped in try-catch to prevent blocking)
+          try {
+            await _analytics.logEvent(
+              name: 'image_cropped',
+              parameters: {
+                'success': 1, // Firebase Analytics requires num or String, not bool
+                'file_size_kb': (await croppedFile.length() / 1024).toStringAsFixed(2),
+              },
+            );
+          } catch (analyticsError) {
+            debugPrint('[CameraProvider] ⚠️ Analytics logging failed (non-critical): $analyticsError');
+          }
+        } else {
+          debugPrint('[CameraProvider] ℹ️ Same image returned (no crop applied)');
+        }
+
+        // CRITICAL: Force update state dengan clearImage dulu untuk trigger rebuild
+        debugPrint('[CameraProvider] 🔄 Updating state with cropped image...');
+        state = state.copyWith(clearImage: true); // Clear dulu
+        await Future.delayed(Duration(milliseconds: 50)); // Small delay
+        state = state.copyWith(capturedImage: croppedFile); // Set baru
+
+        debugPrint('[CameraProvider] ✅ State updated successfully');
         return croppedFile;
       } else {
-        debugPrint('[FoodRecognizer] Crop canceled, using original image');
+        debugPrint('[CameraProvider] ❌ Crop canceled (null returned), keeping original');
         return state.capturedImage;
       }
     } catch (e) {
-      debugPrint('[FoodRecognizer] Failed to crop image, continue with original: $e');
+      debugPrint('[CameraProvider] ❌ Error in crop flow: $e');
       return state.capturedImage;
     }
   }

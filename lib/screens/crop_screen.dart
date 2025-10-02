@@ -18,6 +18,7 @@ class CropScreen extends StatefulWidget {
 
 class _CropScreenState extends State<CropScreen> {
   bool _isProcessing = false;
+  bool _hasStartedCrop = false; // Flag untuk mencegah multiple crop calls
 
   @override
   void initState() {
@@ -39,6 +40,14 @@ class _CropScreenState extends State<CropScreen> {
       SystemUiMode.edgeToEdge,
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
     );
+
+    // Langsung panggil crop di initState, sekali saja
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasStartedCrop) {
+        _hasStartedCrop = true;
+        _cropImage();
+      }
+    });
   }
 
   @override
@@ -103,10 +112,16 @@ class _CropScreenState extends State<CropScreen> {
         });
 
         if (croppedFile != null) {
+          debugPrint('[CropScreen] ✅ Crop successful!');
+          debugPrint('[CropScreen] Original path: ${widget.imageFile.path}');
+          debugPrint('[CropScreen] Cropped path: ${croppedFile.path}');
+
           // Return cropped image
-          Navigator.pop(context, File(croppedFile.path));
+          final resultFile = File(croppedFile.path);
+          debugPrint('[CropScreen] Returning cropped file to caller');
+          Navigator.pop(context, resultFile);
         } else {
-          // User cancelled, return original
+          debugPrint('[CropScreen] ❌ User cancelled crop, returning original');
           Navigator.pop(context, widget.imageFile);
         }
       }
@@ -123,13 +138,6 @@ class _CropScreenState extends State<CropScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Langsung buka crop saat screen dimuat
-    if (!_isProcessing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _cropImage();
-      });
-    }
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(

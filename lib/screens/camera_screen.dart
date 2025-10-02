@@ -61,7 +61,14 @@ class CameraScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(24),
                           child: Image.file(
                             cameraState.capturedImage!,
+                            key: ValueKey(cameraState.capturedImage!.path),
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('[CameraScreen] Error loading image: $error');
+                              return const Center(
+                                child: Icon(Icons.error, color: Colors.red, size: 48),
+                              );
+                            },
                           ),
                         ),
                       ),
