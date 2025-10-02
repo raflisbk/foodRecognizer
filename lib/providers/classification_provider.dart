@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
@@ -74,31 +75,33 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
 
   Future<void> initialize({bool useFirebaseModel = true}) async {
     try {
+      debugPrint('[ClassificationProvider] INITIALIZE STARTED');
       state = state.copyWith(isLoading: true);
 
       String? modelPath;
 
       if (useFirebaseModel) {
-        _logger.i('[ClassificationProvider] Attempting to download model from Firebase ML');
+        debugPrint('[ClassificationProvider] Attempting to download model from Firebase ML');
         modelPath = await _firebaseMLService.downloadModel();
 
         if (modelPath != null) {
-          _logger.i('[ClassificationProvider] SUCCESS: Cloud model downloaded from Firebase ML');
-          _logger.i('[ClassificationProvider] Model source: Firebase ML (Cloud)');
-          _logger.i('[ClassificationProvider] Model path: $modelPath');
+          debugPrint('[ClassificationProvider] SUCCESS: Cloud model downloaded from Firebase ML');
+          debugPrint('[ClassificationProvider] Model source: Firebase ML (Cloud)');
+          debugPrint('[ClassificationProvider] Model path: $modelPath');
           state = state.copyWith(
             useFirebaseModel: true,
             firebaseModelPath: modelPath,
           );
         } else {
-          _logger.w('[ClassificationProvider] WARNING: Firebase model download failed');
-          _logger.i('[ClassificationProvider] Fallback: Using local on-device model');
+          debugPrint('[ClassificationProvider] WARNING: Firebase model download failed');
+          debugPrint('[ClassificationProvider] Fallback: Using local on-device model');
         }
       } else {
-        _logger.i('[ClassificationProvider] Model source: Local on-device model');
-        _logger.i('[ClassificationProvider] Using bundled asset model');
+        debugPrint('[ClassificationProvider] Model source: Local on-device model');
+        debugPrint('[ClassificationProvider] Using bundled asset model');
       }
 
+      debugPrint('[ClassificationProvider] Calling ImageClassificationService.initialize');
       await _classificationService.initialize(modelPath: modelPath);
 
       // Log analytics event for model initialization
@@ -111,14 +114,16 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       );
 
       final String modelSource = (useFirebaseModel && modelPath != null) ? 'Firebase ML (Cloud)' : 'Local on-device';
-      _logger.i('[ClassificationProvider] Model initialization completed');
-      _logger.i('[ClassificationProvider] Active model: $modelSource');
-      _logger.i('[ClassificationProvider] Food recognition system ready');
+      debugPrint('[ClassificationProvider] Model initialization completed');
+      debugPrint('[ClassificationProvider] Active model: $modelSource');
+      debugPrint('[ClassificationProvider] Food recognition system ready');
 
+      debugPrint('[ClassificationProvider] Setting isInitialized = true, isLoading = false');
       state = state.copyWith(
         isInitialized: true,
         isLoading: false,
       );
+      debugPrint('[ClassificationProvider] State updated: isInitialized=${state.isInitialized}, isLoading=${state.isLoading}');
     } on FileSystemException catch (fileError) {
       _logger.e('File system error: $fileError');
       state = state.copyWith(

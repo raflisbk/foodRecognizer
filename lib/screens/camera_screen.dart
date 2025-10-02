@@ -101,7 +101,8 @@ class CameraScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (classificationState.isLoading)
+                  // Show analyzing indicator only during inference (not during model loading)
+                  if (classificationState.isLoading && classificationState.isInitialized)
                     FadeIn(
                       child: Column(
                         children: [
@@ -120,82 +121,120 @@ class CameraScreen extends ConsumerWidget {
                           const SizedBox(height: 8),
                         ],
                       ),
-                    )
-                  else ...[
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 100),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: cameraState.capturedImage != null
-                              ? () async {
-                                  await ref
-                                      .read(classificationProvider.notifier)
-                                      .classifyImage(cameraState.capturedImage!);
+                    ),
 
-                                  if (context.mounted &&
-                                      ref.read(classificationProvider).prediction != null) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => PredictionScreen(
-                                          imageFile: cameraState.capturedImage!,
-                                          prediction: ref
-                                              .read(classificationProvider)
-                                              .prediction!,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                  // Show model loading indicator only when model is not ready
+                  if (!classificationState.isInitialized)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primaryColor,
                             ),
-                            elevation: 4,
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.analytics),
-                              SizedBox(width: 12),
-                              Text(
-                                'Analyze Food',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                          const SizedBox(width: 12),
+                          Text(
+                            'Loading AI model...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Show buttons when model is ready (even if currently analyzing)
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 100),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: (cameraState.capturedImage != null &&
+                                   classificationState.isInitialized &&
+                                   !classificationState.isLoading)
+                            ? () async {
+                                await ref
+                                    .read(classificationProvider.notifier)
+                                    .classifyImage(cameraState.capturedImage!);
+
+                                if (context.mounted &&
+                                    ref.read(classificationProvider).prediction != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PredictionScreen(
+                                        imageFile: cameraState.capturedImage!,
+                                        prediction: ref
+                                            .read(classificationProvider)
+                                            .prediction!,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: classificationState.isLoading && classificationState.isInitialized
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
                                 ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.analytics),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Analyze Food',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 200),
+                    child: TextButton(
+                      onPressed: () {
+                        ref.read(cameraProvider.notifier).clearImage();
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Take Another Photo',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 200),
-                      child: TextButton(
-                        onPressed: () {
-                          ref.read(cameraProvider.notifier).clearImage();
-                          Navigator.pop(context);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: const Text(
-                          'Take Another Photo',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),

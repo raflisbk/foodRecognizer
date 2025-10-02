@@ -18,9 +18,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Initialize classification service with Firebase ML
-      ref.read(classificationProvider.notifier).initialize(useFirebaseModel: true);
+    debugPrint('[HomeScreen] HomeScreen loaded - initializing ML model');
+    // Use Future.microtask to defer initialization until after widget tree is built
+    Future.microtask(() async {
+      try {
+        await ref.read(classificationProvider.notifier).initialize(useFirebaseModel: true);
+        debugPrint('[HomeScreen] ML model initialization complete');
+      } catch (e) {
+        debugPrint('[HomeScreen] ML model initialization failed: $e');
+      }
     });
   }
 

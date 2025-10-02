@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../constants/api_constants.dart';
 import '../models/food_prediction.dart';
@@ -70,15 +71,22 @@ class ImageClassificationService {
       _labels = labelsData.split('\n').where((label) => label.isNotEmpty).toList();
       debugPrint('[FoodRecognizer] Successfully loaded ${_labels.length} food types');
 
-      // Set model path
+      // Set model path - convert asset to file if needed
       if (modelPath != null) {
         _currentModelPath = modelPath;
         _isAssetModel = false;
         debugPrint('[FoodRecognizer] Using Cloud AI model from Firebase ML');
       } else {
-        _currentModelPath = 'assets/models/${ApiConstants.modelFileName}';
-        _isAssetModel = true;
-        debugPrint('[FoodRecognizer] Using Local on-device AI model');
+        // CRITICAL FIX: Copy asset model to file system for isolate access
+        debugPrint('[FoodRecognizer] Copying asset model to file system...');
+        final modelBytes = await rootBundle.load('assets/models/${ApiConstants.modelFileName}');
+        final tempDir = await getTemporaryDirectory();
+        final modelFile = File('${tempDir.path}/${ApiConstants.modelFileName}');
+        await modelFile.writeAsBytes(modelBytes.buffer.asUint8List());
+
+        _currentModelPath = modelFile.path;
+        _isAssetModel = false; // Now using file path, not asset
+        debugPrint('[FoodRecognizer] Local model copied to: ${modelFile.path}');
       }
 
       // Setup long-lived isolate untuk inference
@@ -199,15 +207,10 @@ class ImageClassificationService {
           case _IsolateMessageType.initialize:
             final initData = message.data as _InitializeMessage;
 
-            // Load model SEKALI SAJA
-            if (initData.isAssetModel) {
-              // ignore: await_only_futures
-              interpreter = await Interpreter.fromAsset(initData.modelPath);
-            } else {
-              final modelFile = File(initData.modelPath);
-              // ignore: await_only_futures
-              interpreter = await Interpreter.fromFile(modelFile);
-            }
+            // Load model SEKALI SAJA - always from file (asset already copied to file)
+            final modelFile = File(initData.modelPath);
+            // ignore: await_only_futures
+            interpreter = await Interpreter.fromFile(modelFile);
 
             // Cache model metadata
             labels = initData.labels;
