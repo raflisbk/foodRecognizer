@@ -1,15 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:logger/logger.dart';
 import '../constants/api_constants.dart';
 import '../models/food_prediction.dart';
 
 class ImageClassificationService {
-  static final Logger _logger = Logger();
   Interpreter? _interpreter;
   List<String> _labels = [];
 
@@ -21,60 +18,89 @@ class ImageClassificationService {
 
   Future<void> initialize({String? modelPath}) async {
     try {
-      debugPrint('[FoodRecognizer] Memuat label makanan...');
+      debugPrint('[FoodRecognizer] Loading food labels...');
 
       // Load labels
       final labelsData = await rootBundle.loadString('assets/labels/labels.txt');
       _labels = labelsData.split('\n').where((label) => label.isNotEmpty).toList();
-      debugPrint('[FoodRecognizer] Berhasil memuat ${_labels.length} jenis makanan');
+      debugPrint('[FoodRecognizer] Successfully loaded ${_labels.length} food types');
 
       // Load model
-      debugPrint('[FoodRecognizer] Memuat model AI...');
+      debugPrint('[FoodRecognizer] Loading AI model...');
       if (modelPath != null) {
         // Load from Firebase ML downloaded model (path is a String)
         final modelFile = File(modelPath);
+        // ignore: await_only_futures
         _interpreter = await Interpreter.fromFile(modelFile);
-        debugPrint('[FoodRecognizer] Model AI dari cloud berhasil dimuat');
+        debugPrint('[FoodRecognizer] Cloud AI model loaded successfully');
       } else {
         // Load from assets
+        // ignore: await_only_futures
         _interpreter = await Interpreter.fromAsset('assets/models/${ApiConstants.modelFileName}');
-        debugPrint('[FoodRecognizer] Model AI lokal berhasil dimuat');
+        debugPrint('[FoodRecognizer] Local AI model loaded successfully');
       }
 
-      debugPrint('[FoodRecognizer] Sistem pengenalan makanan siap digunakan');
+      debugPrint('[FoodRecognizer] Food recognition system ready');
     } catch (e) {
-      debugPrint('[FoodRecognizer] Gagal memuat sistem: $e');
+      debugPrint('[FoodRecognizer] Failed to load system: $e');
       rethrow;
     }
   }
 
   Future<FoodPrediction?> classifyImage(Uint8List imageBytes) async {
     if (_interpreter == null) {
-      debugPrint('[FoodRecognizer] Model AI belum siap, silakan tunggu sebentar');
+      debugPrint('[FoodRecognizer] AI model not ready, please wait');
       return null;
     }
 
     try {
-      debugPrint('[FoodRecognizer] Menganalisis gambar...');
+      debugPrint('[FoodRecognizer] Analyzing image...');
 
       // Decode image
       img.Image? image = img.decodeImage(imageBytes);
       if (image == null) {
-        debugPrint('[FoodRecognizer] Gagal membaca gambar');
+        debugPrint('[FoodRecognizer] Failed to read image');
         return null;
       }
 
       // Preprocess image
       final inputImage = _preprocessImage(image);
 
-      // Prepare output
-      final output = List.filled(1 * _labels.length, 0.0).reshape([1, _labels.length]);
+      // Get output shape and quantization parameters from model
+      final outputTensor = _interpreter!.getOutputTensor(0);
+      final outputShape = outputTensor.shape;
+      final numClasses = outputShape[1];
+
+      // Check if model is quantized by checking quantization parameters
+      final quantizationParams = outputTensor.params;
+      final isQuantized = quantizationParams.scale != 0.0;
+
+      // Prepare output buffer based on model type
+      dynamic output;
+      if (isQuantized) {
+        // For quantized models, use uint8 buffer
+        output = List.filled(1 * numClasses, 0).reshape([1, numClasses]);
+      } else {
+        // For float models, use double buffer
+        output = List.filled(1 * numClasses, 0.0).reshape([1, numClasses]);
+      }
 
       // Run inference
       _interpreter!.run(inputImage, output);
 
-      // Get results
-      final predictions = output[0] as List<double>;
+      // Get results and dequantize if needed
+      List<double> predictions;
+      if (isQuantized) {
+        // Dequantize: output = (quantized_value - zero_point) * scale
+        // For this model: scale = 0.00390625, zero_point = 0
+        final scale = quantizationParams.scale;
+        final zeroPoint = quantizationParams.zeroPoint;
+
+        final quantizedOutput = output[0] as List<int>;
+        predictions = quantizedOutput.map((q) => (q - zeroPoint) * scale).toList();
+      } else {
+        predictions = output[0] as List<double>;
+      }
 
       // Find best prediction
       double maxConfidence = 0;
@@ -88,8 +114,30 @@ class ImageClassificationService {
       }
 
       if (maxConfidence < ApiConstants.confidenceThreshold) {
-        debugPrint('[FoodRecognizer] Tingkat kepercayaan terlalu rendah: ${(maxConfidence * 100).toStringAsFixed(1)}%');
-        return null;
+        final confidencePercent = (maxConfidence * 100).toStringAsFixed(1);
+        debugPrint('[FoodRecognizer] Confidence level too low: $confidencePercent%');
+        debugPrint('[FoodRecognizer] Threshold: ${(ApiConstants.confidenceThreshold * 100).toStringAsFixed(0)}%');
+
+        // Return prediction with special low confidence flag
+        // We'll use a negative confidence to signal low confidence to the provider
+        final prediction = FoodPrediction(
+          label: _labels.length > maxIndex ? _labels[maxIndex] : 'Unknown',
+          confidence: -maxConfidence, // Negative to signal low confidence
+          timestamp: DateTime.now(),
+        );
+        return prediction;
+      }
+
+      // Check if maxIndex is within labels bounds
+      if (maxIndex >= _labels.length) {
+        debugPrint('[FoodRecognizer] Prediction index ($maxIndex) exceeds label count (${_labels.length})');
+        debugPrint('[FoodRecognizer] Using "Unknown Food" label for out-of-range index');
+        final prediction = FoodPrediction(
+          label: 'Unknown Food (Class $maxIndex)',
+          confidence: maxConfidence,
+          timestamp: DateTime.now(),
+        );
+        return prediction;
       }
 
       final prediction = FoodPrediction(
@@ -98,10 +146,10 @@ class ImageClassificationService {
         timestamp: DateTime.now(),
       );
 
-      debugPrint('[FoodRecognizer] Terdeteksi: ${_labels[maxIndex]} (${(maxConfidence * 100).toStringAsFixed(1)}%)');
+      debugPrint('[FoodRecognizer] Detected: ${_labels[maxIndex]} (${(maxConfidence * 100).toStringAsFixed(1)}%)');
       return prediction;
     } catch (e) {
-      debugPrint('[FoodRecognizer] Gagal menganalisis gambar: $e');
+      debugPrint('[FoodRecognizer] Failed to analyze image: $e');
       return null;
     }
   }
@@ -115,7 +163,7 @@ class ImageClassificationService {
       height: ApiConstants.inputSize,
     );
 
-    // Convert to uint8 array (0-255 range, no normalization)
+    // Convert to int array with uint8 values (0-255 range, no normalization)
     final input = List.generate(
       1,
       (index) => List.generate(
@@ -142,7 +190,7 @@ class ImageClassificationService {
       final imageBytes = await rootBundle.load(imagePath);
       return classifyImage(imageBytes.buffer.asUint8List());
     } catch (e) {
-      debugPrint('[FoodRecognizer] Gagal memuat gambar: $e');
+      debugPrint('[FoodRecognizer] Failed to load image: $e');
       return null;
     }
   }

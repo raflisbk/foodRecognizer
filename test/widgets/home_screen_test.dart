@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'package:food_recognizer/screens/home_screen.dart';
 import 'package:food_recognizer/providers/classification_provider.dart';
-import 'package:food_recognizer/providers/camera_provider.dart';
+import 'package:food_recognizer/services/image_classification_service.dart';
+import 'package:food_recognizer/services/firebase_ml_service.dart';
+import 'package:food_recognizer/models/food_prediction.dart';
 import 'package:food_recognizer/constants/app_theme.dart';
 
 void main() {
@@ -148,15 +151,15 @@ void main() {
     testWidgets('HomeScreen should use correct theme colors', (WidgetTester tester) async {
       // Arrange & Act
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
           child: MaterialApp(
             theme: ThemeData(
-              colorScheme: ColorScheme.light(
+              colorScheme: const ColorScheme.light(
                 primary: AppTheme.primaryColor,
                 secondary: AppTheme.secondaryColor,
               ),
             ),
-            home: HomeScreen(),
+            home: const HomeScreen(),
           ),
         ),
       );
@@ -213,6 +216,38 @@ void main() {
 }
 
 // Mock ClassificationNotifier for testing
-class _MockClassificationNotifier extends StateNotifier<ClassificationState> {
-  _MockClassificationNotifier(ClassificationState state) : super(state);
+class _MockClassificationNotifier extends ClassificationNotifier {
+  _MockClassificationNotifier(ClassificationState initialState)
+      : super(_MockImageClassificationService(), _MockFirebaseMLService()) {
+    state = initialState;
+  }
+}
+
+// Mock services for testing
+class _MockImageClassificationService implements ImageClassificationService {
+  @override
+  Future<void> initialize({String? modelPath}) async {}
+
+  @override
+  Future<FoodPrediction?> classifyImage(dynamic imageBytes) async => null;
+
+  @override
+  Future<FoodPrediction?> classifyImageFromPath(String imagePath) async => null;
+
+  @override
+  void dispose() {}
+}
+
+class _MockFirebaseMLService implements FirebaseMLService {
+  @override
+  Future<String?> downloadModel() async => null;
+
+  @override
+  Future<bool> deleteModel() async => false;
+
+  @override
+  Future<bool> isModelDownloaded() async => false;
+
+  @override
+  Future<List<FirebaseCustomModel>> listDownloadedModels() async => [];
 }

@@ -1,5 +1,5 @@
 name: food_recognizer
-description: "A new Flutter project."
+description: "NutriSnap - AI-powered food recognition and nutrition tracking app"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -72,6 +72,8 @@ dependencies:
   device_info_plus: ^12.1.0
   firebase_crashlytics: ^4.3.10
   firebase_analytics: ^11.6.0
+  flutter_dotenv: ^5.2.1
+  flutter_native_splash: ^2.4.3
 
 dev_dependencies:
   flutter_test:
@@ -102,6 +104,7 @@ flutter:
     - assets/models/
     - assets/labels/
     - assets/animations/
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -128,3 +131,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Splash screen configuration
+flutter_native_splash:
+  color: "#F8FAF5"
+  image: assets/animations/splash_icon.png
+  color_dark: "#2D3E2D"
+  image_dark: assets/animations/splash_icon.png
+  android_12:
+    image: assets/animations/splash_icon.png
+    icon_background_color: "#F8FAF5"
+    image_dark: assets/animations/splash_icon.png
+    icon_background_color_dark: "#2D3E2D"
+  android: true
+  ios: true
+  web: false

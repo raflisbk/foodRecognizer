@@ -19,7 +19,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
-        android:label="food_recognizer"
+        android:label="NutriSnap"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -13,7 +13,9 @@ class FirebaseMLService {
 
   Future<String?> downloadModel() async {
     try {
-      _logger.i('Starting model download from Firebase ML');
+      _logger.i('[FirebaseML] Starting model download from Firebase ML');
+      _logger.i('[FirebaseML] Model name: ${ApiConstants.firebaseModelName}');
+      _logger.i('[FirebaseML] Download type: Latest model');
 
       final model = await FirebaseModelDownloader.instance.getModel(
         ApiConstants.firebaseModelName,
@@ -27,10 +29,11 @@ class FirebaseMLService {
         ),
       );
 
-      _logger.i('Model downloaded successfully: ${model.file.path}');
+      _logger.i('[FirebaseML] Model downloaded successfully');
+      _logger.i('[FirebaseML] Model file path: ${model.file.path}');
       return model.file.path;
     } catch (e) {
-      _logger.e('Error downloading model from Firebase: $e');
+      _logger.e('[FirebaseML] ERROR: Failed to download model from Firebase - $e');
       return null;
     }
   }

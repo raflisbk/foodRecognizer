@@ -13,6 +13,13 @@
 migrate_working_dir/
 .claude/
 
+# Environment variables
+.env
+
+# Documentation files (exclude from git, keep only README.md)
+*.md
+!README.md
+
 # IntelliJ related
 *.iml
 *.ipr

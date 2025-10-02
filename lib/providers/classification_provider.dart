@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import '../constants/api_constants.dart';
 import '../models/food_prediction.dart';
 import '../services/image_classification_service.dart';
 import '../services/firebase_ml_service.dart';
@@ -79,17 +79,24 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       String? modelPath;
 
       if (useFirebaseModel) {
-        _logger.i('Attempting to download model from Firebase ML');
+        _logger.i('[ClassificationProvider] Attempting to download model from Firebase ML');
         modelPath = await _firebaseMLService.downloadModel();
 
         if (modelPath != null) {
+          _logger.i('[ClassificationProvider] SUCCESS: Cloud model downloaded from Firebase ML');
+          _logger.i('[ClassificationProvider] Model source: Firebase ML (Cloud)');
+          _logger.i('[ClassificationProvider] Model path: $modelPath');
           state = state.copyWith(
             useFirebaseModel: true,
             firebaseModelPath: modelPath,
           );
         } else {
-          _logger.w('Firebase model download failed, using local model');
+          _logger.w('[ClassificationProvider] WARNING: Firebase model download failed');
+          _logger.i('[ClassificationProvider] Fallback: Using local on-device model');
         }
+      } else {
+        _logger.i('[ClassificationProvider] Model source: Local on-device model');
+        _logger.i('[ClassificationProvider] Using bundled asset model');
       }
 
       await _classificationService.initialize(modelPath: modelPath);
@@ -98,10 +105,15 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       await _analytics.logEvent(
         name: 'model_initialized',
         parameters: {
-          'model_source': useFirebaseModel ? 'firebase' : 'local',
+          'model_source': useFirebaseModel && modelPath != null ? 'firebase' : 'local',
           'model_path': modelPath ?? 'local_asset',
         },
       );
+
+      final String modelSource = (useFirebaseModel && modelPath != null) ? 'Firebase ML (Cloud)' : 'Local on-device';
+      _logger.i('[ClassificationProvider] Model initialization completed');
+      _logger.i('[ClassificationProvider] Active model: $modelSource');
+      _logger.i('[ClassificationProvider] Food recognition system ready');
 
       state = state.copyWith(
         isInitialized: true,
@@ -111,25 +123,25 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       _logger.e('File system error: $fileError');
       state = state.copyWith(
         isLoading: false,
-        error: 'Gagal mengakses file model AI. Pastikan aplikasi memiliki izin penyimpanan yang cukup.',
+        error: 'Failed to access AI model file. Ensure app has sufficient storage permissions.',
       );
     } on PlatformException catch (platformError) {
       _logger.e('Platform error: $platformError');
       state = state.copyWith(
         isLoading: false,
-        error: 'Kesalahan sistem: ${platformError.message ?? "Unknown"}. Silakan restart aplikasi.',
+        error: 'System error: ${platformError.message ?? "Unknown"}. Please restart the app.',
       );
     } catch (e) {
       _logger.e('Error initializing classification: $e');
       String errorMessage;
       if (e.toString().contains('OutOfMemory')) {
-        errorMessage = 'Memori perangkat tidak cukup. Tutup beberapa aplikasi lain dan coba lagi.';
+        errorMessage = 'Device memory insufficient. Close some apps and try again.';
       } else if (e.toString().contains('Network')) {
-        errorMessage = 'Gagal mengunduh model AI. Periksa koneksi internet Anda.';
+        errorMessage = 'Failed to download AI model. Check your internet connection.';
       } else if (e.toString().contains('Permission')) {
-        errorMessage = 'Aplikasi tidak memiliki izin yang diperlukan. Periksa pengaturan izin.';
+        errorMessage = 'App lacks required permissions. Check permission settings.';
       } else {
-        errorMessage = 'Gagal memuat model AI. Silakan restart aplikasi atau hubungi developer.';
+        errorMessage = 'Failed to load AI model. Please restart app or contact developer.';
       }
       state = state.copyWith(
         isLoading: false,
@@ -146,7 +158,7 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       if (!await imageFile.exists()) {
         state = state.copyWith(
           isLoading: false,
-          error: 'File gambar tidak ditemukan. Silakan pilih gambar lagi.',
+          error: 'Image file not found. Please select image again.',
         );
         return;
       }
@@ -156,7 +168,7 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       if (fileSize == 0) {
         state = state.copyWith(
           isLoading: false,
-          error: 'File gambar kosong atau rusak. Silakan pilih gambar lain.',
+          error: 'Image file is empty or corrupted. Please select another image.',
         );
         return;
       }
@@ -165,13 +177,34 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       final prediction = await _classificationService.classifyImage(imageBytes);
 
       if (prediction != null) {
+        // Check if this is a low confidence prediction (negative confidence)
+        if (prediction.confidence < 0) {
+          final actualConfidence = -prediction.confidence; // Convert back to positive
+          final confidencePercent = (actualConfidence * 100).toStringAsFixed(1);
+
+          _logger.w('[ClassificationProvider] Low confidence detection: ${prediction.label} ($confidencePercent%)');
+
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Unable to confidently identify the food in this image.\n\n'
+                   'The model detected "${prediction.label}" but with only $confidencePercent% confidence '
+                   '(minimum required: ${(ApiConstants.confidenceThreshold * 100).toStringAsFixed(0)}%).\n\n'
+                   'Tips for better recognition:\n'
+                   '• Ensure the food is clearly visible\n'
+                   '• Use good lighting conditions\n'
+                   '• Take a closer, focused shot\n'
+                   '• Make sure the food fills most of the frame',
+          );
+          return;
+        }
+
         // Log analytics event for successful classification
         await _analytics.logEvent(
           name: 'food_classified',
           parameters: {
             'food_label': prediction.label,
             'confidence': (prediction.confidence * 100).toStringAsFixed(2),
-            'high_confidence': prediction.confidence >= 0.8,
+            'high_confidence': prediction.confidence >= 0.8 ? 1 : 0,
           },
         );
 
@@ -182,31 +215,36 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Tidak dapat mengenali makanan pada gambar. Pastikan gambar berisi makanan yang jelas '
-                 'dan coba lagi dengan pencahayaan yang lebih baik.',
+          error: 'Unable to recognize any food in this image.\n\n'
+                 'Please ensure:\n'
+                 '• The image contains food items\n'
+                 '• The food is clearly visible\n'
+                 '• Lighting is adequate\n'
+                 '• The image is not blurry or too dark\n\n'
+                 'Try taking a new photo with better conditions.',
         );
       }
     } on FileSystemException catch (e) {
       _logger.e('File system error: $e');
       state = state.copyWith(
         isLoading: false,
-        error: 'Gagal membaca file gambar. Silakan coba lagi.',
+        error: 'Failed to read image file. Please try again.',
       );
     } on FormatException catch (e) {
       _logger.e('Format error: $e');
       state = state.copyWith(
         isLoading: false,
-        error: 'Format gambar tidak didukung. Gunakan format JPG, PNG, atau WEBP.',
+        error: 'Image format not supported. Use JPG, PNG, or WEBP format.',
       );
     } catch (e) {
       _logger.e('Error classifying image: $e');
       String errorMessage;
       if (e.toString().contains('OutOfMemory')) {
-        errorMessage = 'Memori tidak cukup. Coba gunakan gambar dengan ukuran lebih kecil.';
+        errorMessage = 'Insufficient memory. Try using a smaller image.';
       } else if (e.toString().contains('Interpreter')) {
-        errorMessage = 'Model AI belum siap. Tunggu sebentar dan coba lagi.';
+        errorMessage = 'AI model not ready. Wait a moment and try again.';
       } else {
-        errorMessage = 'Gagal menganalisis gambar. Silakan coba lagi atau gunakan gambar lain.';
+        errorMessage = 'Failed to analyze image. Please try again or use another image.';
       }
       state = state.copyWith(
         isLoading: false,
@@ -222,6 +260,22 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
       final prediction = await _classificationService.classifyImage(imageBytes);
 
       if (prediction != null) {
+        // Check if this is a low confidence prediction (negative confidence)
+        if (prediction.confidence < 0) {
+          final actualConfidence = -prediction.confidence;
+          final confidencePercent = (actualConfidence * 100).toStringAsFixed(1);
+
+          _logger.w('[ClassificationProvider] Low confidence in live stream: ${prediction.label} ($confidencePercent%)');
+
+          // For live detection, we just skip low confidence without showing error
+          // This prevents constant error messages during streaming
+          state = state.copyWith(
+            isLoading: false,
+            clearPrediction: true, // Clear any previous prediction
+          );
+          return;
+        }
+
         state = state.copyWith(
           prediction: prediction,
           isLoading: false,

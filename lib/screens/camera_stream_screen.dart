@@ -7,7 +7,6 @@ import 'package:image/image.dart' as img;
 import '../constants/app_theme.dart';
 import '../providers/camera_provider.dart';
 import '../providers/classification_provider.dart';
-import '../services/camera_service.dart';
 
 class CameraStreamScreen extends ConsumerStatefulWidget {
   const CameraStreamScreen({super.key});
@@ -18,6 +17,7 @@ class CameraStreamScreen extends ConsumerStatefulWidget {
 
 class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
   bool _isProcessing = false;
+  bool _isDisposed = false; // Flag to prevent processing after dispose
   String? _currentLabel;
   double? _currentConfidence;
 
@@ -39,36 +39,70 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
   }
 
   Future<void> _processCameraImage(CameraImage cameraImage) async {
-    if (_isProcessing) return;
+    // CRITICAL: Early exit if disposed - prevents buffer leak
+    if (_isDisposed || _isProcessing || !mounted) {
+      return;
+    }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    // Use try-catch to safely set state
+    try {
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _isProcessing = true;
+      });
+    } catch (e) {
+      // State might be disposed, exit immediately
+      return;
+    }
 
     try {
+      // Check if disposed before heavy processing
+      if (_isDisposed || !mounted) return;
+
       // Convert CameraImage to Uint8List
       final bytes = _convertCameraImage(cameraImage);
+
+      // Check again after conversion (could take time)
+      if (_isDisposed || !mounted) return;
 
       if (bytes != null) {
         // Classify image
         await ref.read(classificationProvider.notifier).classifyImageBytes(bytes);
 
+        // Check if disposed after async classification
+        if (_isDisposed || !mounted) return;
+
         final prediction = ref.read(classificationProvider).prediction;
-        if (prediction != null && mounted) {
-          setState(() {
-            _currentLabel = prediction.label;
-            _currentConfidence = prediction.confidence;
-          });
+        if (prediction != null && !_isDisposed && mounted) {
+          try {
+            setState(() {
+              _currentLabel = prediction.label;
+              _currentConfidence = prediction.confidence;
+            });
+          } catch (e) {
+            // Widget might be disposed, ignore
+          }
         }
       }
     } catch (e) {
-      // Handle error silently
+      // Handle error silently, but log it
+      debugPrint('[CameraStream] Error processing image: $e');
     } finally {
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
+      // Add delay before next frame, but only if not disposed
+      if (!_isDisposed && mounted) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // Reset processing flag only if not disposed
+      if (!_isDisposed && mounted) {
+        try {
+          setState(() {
+            _isProcessing = false;
+          });
+        } catch (e) {
+          // Widget disposed, ignore
+        }
       }
     }
   }
@@ -112,7 +146,26 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
 
   @override
   void dispose() {
-    ref.read(cameraProvider.notifier).stopStreaming();
+    debugPrint('[CameraStream] Disposing screen - stopping all processes');
+
+    // CRITICAL: Set disposed flag FIRST to stop all processing immediately
+    // This prevents any queued camera frames from being processed
+    _isDisposed = true;
+
+    // Reset processing flags
+    _isProcessing = false;
+    _currentLabel = null;
+    _currentConfidence = null;
+
+    // Stop camera stream
+    // Any frames already in the queue will see _isDisposed = true and exit early
+    try {
+      ref.read(cameraProvider.notifier).stopStreaming();
+    } catch (e) {
+      debugPrint('[CameraStream] Error stopping stream: $e');
+    }
+
+    debugPrint('[CameraStream] All processes stopped, screen disposed');
     super.dispose();
   }
 
@@ -190,14 +243,14 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryColor.withOpacity(0.9),
-                            AppTheme.secondaryColor.withOpacity(0.9),
+                            AppTheme.primaryColor.withValues(alpha: 0.9),
+                            AppTheme.secondaryColor.withValues(alpha: 0.9),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.5),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.5),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -210,7 +263,7 @@ class _CameraStreamScreenState extends ConsumerState<CameraStreamScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(

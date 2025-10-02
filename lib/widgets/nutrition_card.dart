@@ -17,13 +17,13 @@ class NutritionCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.secondaryColor.withOpacity(0.1),
-            AppTheme.primaryColor.withOpacity(0.1),
+            AppTheme.secondaryColor.withValues(alpha: 0.1),
+            AppTheme.primaryColor.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.secondaryColor.withOpacity(0.3),
+          color: AppTheme.secondaryColor.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -42,7 +42,7 @@ class NutritionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -190,7 +190,7 @@ class _NutritionItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -201,7 +201,7 @@ class _NutritionItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

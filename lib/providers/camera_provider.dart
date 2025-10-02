@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -103,7 +102,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
           }
         } catch (e) {
           debugPrint('[FoodRecognizer] Error getting device info: $e');
-          state = state.copyWith(error: 'Gagal memeriksa versi Android. Silakan coba lagi.');
+          state = state.copyWith(error: 'Failed to check Android version. Please try again.');
           return;
         }
       } else {
@@ -114,8 +113,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isDenied) {
         state = state.copyWith(
-          error: 'Izin ditolak. Aplikasi memerlukan akses galeri untuk memilih foto. '
-                 'Silakan izinkan akses saat diminta.'
+          error: 'Permission denied. App needs gallery access to select photos. '
+                 'Please allow access when prompted.'
         );
         debugPrint('[FoodRecognizer] Permission denied');
         return;
@@ -123,8 +122,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isPermanentlyDenied) {
         state = state.copyWith(
-          error: 'Izin galeri ditolak permanen. Buka Pengaturan > Aplikasi > Food Recognizer > '
-                 'Izin > Foto, lalu aktifkan akses galeri.'
+          error: 'Gallery permission permanently denied. Open Settings > Apps > NutriSnap > '
+                 'Permissions > Photos, then enable gallery access.'
         );
         debugPrint('[FoodRecognizer] Permission permanently denied');
         return;
@@ -132,8 +131,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isRestricted) {
         state = state.copyWith(
-          error: 'Akses galeri dibatasi oleh sistem. Periksa pengaturan parental control atau '
-                 'pembatasan perangkat Anda.'
+          error: 'Gallery access restricted by system. Check parental control settings or '
+                 'device restrictions.'
         );
         debugPrint('[FoodRecognizer] Permission restricted');
         return;
@@ -143,7 +142,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         debugPrint('[FoodRecognizer] Permission limited, but can proceed');
       }
 
-      debugPrint('[FoodRecognizer] Permission granted, membuka galeri...');
+      debugPrint('[FoodRecognizer] Permission granted, opening gallery...');
 
       try {
         final XFile? image = await _imagePicker.pickImage(
@@ -152,23 +151,23 @@ class CameraNotifier extends StateNotifier<CameraState> {
         );
 
         if (image != null) {
-          debugPrint('[FoodRecognizer] Gambar dipilih: ${image.path}');
+          debugPrint('[FoodRecognizer] Image selected: ${image.path}');
 
           // Verify file exists and readable
           final file = File(image.path);
           if (!await file.exists()) {
-            state = state.copyWith(error: 'File gambar tidak ditemukan. Silakan pilih gambar lain.');
+            state = state.copyWith(error: 'Image file not found. Please select another image.');
             return;
           }
 
           final fileSize = await file.length();
           if (fileSize == 0) {
-            state = state.copyWith(error: 'File gambar kosong atau rusak. Silakan pilih gambar lain.');
+            state = state.copyWith(error: 'Image file is empty or corrupted. Please select another image.');
             return;
           }
 
           if (fileSize > 10 * 1024 * 1024) {
-            state = state.copyWith(error: 'Ukuran gambar terlalu besar (maks 10MB). Silakan pilih gambar yang lebih kecil.');
+            state = state.copyWith(error: 'Image size too large (max 10MB). Please select a smaller image.');
             return;
           }
 
@@ -183,34 +182,36 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
           state = state.copyWith(capturedImage: file);
         } else {
-          debugPrint('[FoodRecognizer] User membatalkan pemilihan gambar');
+          debugPrint('[FoodRecognizer] User canceled image selection');
+          // Clear any previous errors when user cancels
+          state = state.copyWith(error: null);
         }
       } catch (pickerError) {
-        debugPrint('[FoodRecognizer] Error saat membuka galeri: $pickerError');
+        debugPrint('[FoodRecognizer] Error opening gallery: $pickerError');
         if (pickerError.toString().contains('photo_access_denied')) {
           state = state.copyWith(
-            error: 'Akses galeri ditolak oleh sistem. Periksa pengaturan izin aplikasi.'
+            error: 'Gallery access denied by system. Check app permission settings.'
           );
         } else if (pickerError.toString().contains('No Activity found')) {
           state = state.copyWith(
-            error: 'Aplikasi galeri tidak ditemukan. Pastikan perangkat memiliki aplikasi galeri.'
+            error: 'Gallery app not found. Ensure device has a gallery app installed.'
           );
         } else {
           state = state.copyWith(
-            error: 'Gagal membuka galeri. Error: ${pickerError.toString().substring(0, 50)}...'
+            error: 'Failed to open gallery. Error: ${pickerError.toString().substring(0, 50)}...'
           );
         }
       }
     } on PlatformException catch (platformError) {
       debugPrint('[FoodRecognizer] Platform error: $platformError');
       state = state.copyWith(
-        error: 'Terjadi kesalahan sistem: ${platformError.message ?? "Unknown error"}. '
-               'Silakan restart aplikasi.'
+        error: 'System error occurred: ${platformError.message ?? "Unknown error"}. '
+               'Please restart the app.'
       );
     } catch (e) {
       debugPrint('[FoodRecognizer] Unexpected error: $e');
       state = state.copyWith(
-        error: 'Terjadi kesalahan tidak terduga. Silakan coba lagi atau restart aplikasi.'
+        error: 'Unexpected error occurred. Please try again or restart the app.'
       );
     }
   }
@@ -221,8 +222,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isDenied) {
         state = state.copyWith(
-          error: 'Izin ditolak. Aplikasi memerlukan akses kamera untuk mengambil foto. '
-                 'Silakan izinkan akses saat diminta.'
+          error: 'Permission denied. App needs camera access to take photos. '
+                 'Please allow access when prompted.'
         );
         debugPrint('[FoodRecognizer] Camera permission denied');
         return;
@@ -230,8 +231,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isPermanentlyDenied) {
         state = state.copyWith(
-          error: 'Izin kamera ditolak permanen. Buka Pengaturan > Aplikasi > Food Recognizer > '
-                 'Izin > Kamera, lalu aktifkan akses kamera.'
+          error: 'Camera permission permanently denied. Open Settings > Apps > NutriSnap > '
+                 'Permissions > Camera, then enable camera access.'
         );
         debugPrint('[FoodRecognizer] Camera permission permanently denied');
         return;
@@ -239,14 +240,14 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       if (status.isRestricted) {
         state = state.copyWith(
-          error: 'Akses kamera dibatasi oleh sistem. Periksa pengaturan parental control atau '
-                 'pembatasan perangkat Anda.'
+          error: 'Camera access restricted by system. Check parental control settings or '
+                 'device restrictions.'
         );
         debugPrint('[FoodRecognizer] Camera permission restricted');
         return;
       }
 
-      debugPrint('[FoodRecognizer] Camera permission granted, membuka kamera...');
+      debugPrint('[FoodRecognizer] Camera permission granted, opening camera...');
 
       try {
         final XFile? image = await _imagePicker.pickImage(
@@ -256,18 +257,18 @@ class CameraNotifier extends StateNotifier<CameraState> {
         );
 
         if (image != null) {
-          debugPrint('[FoodRecognizer] Foto berhasil diambil: ${image.path}');
+          debugPrint('[FoodRecognizer] Photo captured successfully: ${image.path}');
 
           // Verify file
           final file = File(image.path);
           if (!await file.exists()) {
-            state = state.copyWith(error: 'File foto tidak ditemukan. Silakan coba lagi.');
+            state = state.copyWith(error: 'Photo file not found. Please try again.');
             return;
           }
 
           final fileSize = await file.length();
           if (fileSize == 0) {
-            state = state.copyWith(error: 'File foto kosong atau gagal disimpan. Silakan coba lagi.');
+            state = state.copyWith(error: 'Photo file is empty or failed to save. Please try again.');
             return;
           }
 
@@ -282,38 +283,40 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
           state = state.copyWith(capturedImage: file);
         } else {
-          debugPrint('[FoodRecognizer] User membatalkan pengambilan foto');
+          debugPrint('[FoodRecognizer] User canceled photo capture');
+          // Clear any previous errors when user cancels
+          state = state.copyWith(error: null);
         }
       } catch (cameraError) {
-        debugPrint('[FoodRecognizer] Error saat menggunakan kamera: $cameraError');
+        debugPrint('[FoodRecognizer] Error using camera: $cameraError');
         if (cameraError.toString().contains('camera_access_denied')) {
           state = state.copyWith(
-            error: 'Akses kamera ditolak oleh sistem. Periksa pengaturan izin aplikasi.'
+            error: 'Camera access denied by system. Check app permission settings.'
           );
         } else if (cameraError.toString().contains('No Activity found')) {
           state = state.copyWith(
-            error: 'Aplikasi kamera tidak ditemukan. Pastikan perangkat memiliki aplikasi kamera.'
+            error: 'Camera app not found. Ensure device has a camera app installed.'
           );
         } else if (cameraError.toString().contains('already in use')) {
           state = state.copyWith(
-            error: 'Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut dan coba lagi.'
+            error: 'Camera is being used by another app. Close that app and try again.'
           );
         } else {
           state = state.copyWith(
-            error: 'Gagal membuka kamera. Silakan coba lagi atau restart perangkat.'
+            error: 'Failed to open camera. Please try again or restart device.'
           );
         }
       }
     } on PlatformException catch (platformError) {
       debugPrint('[FoodRecognizer] Platform error: $platformError');
       state = state.copyWith(
-        error: 'Terjadi kesalahan sistem: ${platformError.message ?? "Unknown error"}. '
-               'Silakan restart aplikasi.'
+        error: 'System error occurred: ${platformError.message ?? "Unknown error"}. '
+               'Please restart the app.'
       );
     } catch (e) {
       debugPrint('[FoodRecognizer] Unexpected error: $e');
       state = state.copyWith(
-        error: 'Terjadi kesalahan tidak terduga. Silakan coba lagi atau restart aplikasi.'
+        error: 'Unexpected error occurred. Please try again or restart the app.'
       );
     }
   }
@@ -322,26 +325,26 @@ class CameraNotifier extends StateNotifier<CameraState> {
     if (state.capturedImage == null) return;
 
     try {
-      debugPrint('[FoodRecognizer] Membuka editor crop gambar...');
+      debugPrint('[FoodRecognizer] Opening image crop editor...');
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: state.capturedImage!.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Edit Gambar',
+            toolbarTitle: 'Edit Image',
             toolbarColor: Color(0xFFFF6B6B),
             toolbarWidgetColor: Color(0xFFFFFFFF),
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
           ),
           IOSUiSettings(
-            title: 'Edit Gambar',
+            title: 'Edit Image',
             minimumAspectRatio: 1.0,
           ),
         ],
       );
 
       if (croppedFile != null) {
-        debugPrint('[FoodRecognizer] Gambar berhasil di-crop');
+        debugPrint('[FoodRecognizer] Image cropped successfully');
 
         // Log analytics event for image cropping
         await _analytics.logEvent(
@@ -351,11 +354,11 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
         state = state.copyWith(capturedImage: File(croppedFile.path));
       } else {
-        debugPrint('[FoodRecognizer] Crop dibatalkan, menggunakan gambar asli');
+        debugPrint('[FoodRecognizer] Crop canceled, using original image');
       }
     } catch (e) {
-      debugPrint('[FoodRecognizer] Gagal memotong gambar, lanjutkan dengan gambar asli');
-      // Tidak perlu set error, biarkan user lanjut tanpa crop
+      debugPrint('[FoodRecognizer] Failed to crop image, continue with original');
+      // No need to set error, let user continue without crop
     }
   }
 
@@ -371,8 +374,10 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
   Future<void> stopStreaming() async {
     try {
+      debugPrint('[CameraProvider] Stopping camera stream...');
       await _cameraService.stopImageStream();
       state = state.copyWith(isStreaming: false);
+      debugPrint('[CameraProvider] Camera stream stopped successfully');
     } catch (e) {
       _logger.e('Error stopping stream: $e');
       state = state.copyWith(error: e.toString());

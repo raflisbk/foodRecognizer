@@ -85,16 +85,161 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final classificationState = ref.watch(classificationProvider);
 
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.surfaceGradient,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
+        child: Stack(
+          children: [
+            // Decorative background graphics
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryColor.withValues(alpha: 0.08),
+                      AppTheme.secondaryColor.withValues(alpha: 0.05),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -80,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.secondaryColor.withValues(alpha: 0.06),
+                      AppTheme.primaryColor.withValues(alpha: 0.04),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Additional decorative circles
+            Positioned(
+              top: 350,
+              right: -30,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryColor.withValues(alpha: 0.05),
+                      AppTheme.secondaryColor.withValues(alpha: 0.03),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              right: 80,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.secondaryColor.withValues(alpha: 0.07),
+                      AppTheme.primaryColor.withValues(alpha: 0.04),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Food and nutrition icons
+            Positioned(
+              top: 180,
+              left: 35,
+              child: Icon(
+                Icons.restaurant_menu,
+                size: 50,
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              ),
+            ),
+            Positioned(
+              top: 320,
+              right: 45,
+              child: Icon(
+                Icons.set_meal,
+                size: 45,
+                color: AppTheme.secondaryColor.withValues(alpha: 0.08),
+              ),
+            ),
+            Positioned(
+              top: 500,
+              left: 50,
+              child: Icon(
+                Icons.lunch_dining,
+                size: 42,
+                color: AppTheme.primaryColor.withValues(alpha: 0.09),
+              ),
+            ),
+            Positioned(
+              bottom: 320,
+              right: 40,
+              child: Icon(
+                Icons.local_dining,
+                size: 38,
+                color: AppTheme.secondaryColor.withValues(alpha: 0.11),
+              ),
+            ),
+            Positioned(
+              bottom: 180,
+              left: 45,
+              child: Icon(
+                Icons.fastfood,
+                size: 40,
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
+              ),
+            ),
+            Positioned(
+              bottom: 420,
+              right: 55,
+              child: Icon(
+                Icons.eco,
+                size: 48,
+                color: AppTheme.primaryColor.withValues(alpha: 0.09),
+              ),
+            ),
+            Positioned(
+              top: 600,
+              right: 70,
+              child: Icon(
+                Icons.kitchen,
+                size: 36,
+                color: AppTheme.secondaryColor.withValues(alpha: 0.07),
+              ),
+            ),
+            Positioned(
+              bottom: 520,
+              left: 60,
+              child: Icon(
+                Icons.emoji_food_beverage,
+                size: 44,
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              ),
+            ),
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
               // Header
               Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -103,151 +248,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: 180,
+                        height: 180,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
-                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                              color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                              blurRadius: 24,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.restaurant_rounded,
-                          size: 56,
-                          color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/animations/splash_icon.png',
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       Text(
-                        'Food Recognizer',
-                        style: AppTheme.headlineLarge.copyWith(
+                        'Recognize your food with AI',
+                        style: AppTheme.headlineMedium.copyWith(
                           color: AppTheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Kenali makanan Anda dengan AI',
-                        style: AppTheme.bodyLarge.copyWith(
-                          color: AppTheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // Status indicator
-              if (classificationState.isLoading)
-                FadeIn(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppTheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.secondaryColor.withOpacity(0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: AppTheme.secondaryColor,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            classificationState.useFirebaseModel
-                                ? 'Mengunduh model AI dari cloud...'
-                                : 'Memuat model AI...',
-                            style: AppTheme.titleMedium.copyWith(
-                              color: AppTheme.onSecondaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (classificationState.isInitialized)
-                FadeIn(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successContainer,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.successColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          color: AppTheme.successColor,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            classificationState.useFirebaseModel
-                                ? 'Siap! Menggunakan model AI terbaru'
-                                : 'Siap! Model AI sudah dimuat',
-                            style: AppTheme.titleMedium.copyWith(
-                              color: AppTheme.successColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (classificationState.error != null)
-                FadeIn(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorContainer,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.errorColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline_rounded,
-                          color: AppTheme.errorColor,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Ada kendala: ${classificationState.error}',
-                            style: AppTheme.titleMedium.copyWith(
-                              color: AppTheme.onErrorContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
               const Spacer(),
 
@@ -261,23 +294,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       delay: const Duration(milliseconds: 200),
                       child: _ModernActionButton(
                         icon: Icons.photo_library_rounded,
-                        label: 'Pilih dari Galeri',
+                        label: 'Choose from Gallery',
                         isPrimary: true,
                         onTap: () async {
-                          _showLoadingDialog(context, 'Membuka galeri...');
+                          if (!context.mounted) return;
+                          _showLoadingDialog(context, 'Opening gallery...');
                           await ref.read(cameraProvider.notifier).pickImageFromGallery();
-                          if (mounted) {
-                            Navigator.pop(context); // Close loading
-                            if (ref.read(cameraProvider).capturedImage != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const CameraScreen(),
-                                ),
-                              );
-                            } else if (ref.read(cameraProvider).error != null) {
-                              _showErrorDialog(context, ref.read(cameraProvider).error!);
-                            }
+                          if (!context.mounted) return;
+                          Navigator.pop(context); // Close loading
+                          if (ref.read(cameraProvider).capturedImage != null) {
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CameraScreen(),
+                              ),
+                            );
+                          } else if (ref.read(cameraProvider).error != null) {
+                            if (!context.mounted) return;
+                            _showErrorDialog(context, ref.read(cameraProvider).error!);
                           }
                         },
                       ),
@@ -289,23 +324,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       delay: const Duration(milliseconds: 300),
                       child: _ModernActionButton(
                         icon: Icons.camera_alt_rounded,
-                        label: 'Ambil Foto',
+                        label: 'Take Photo',
                         isPrimary: false,
                         onTap: () async {
-                          _showLoadingDialog(context, 'Membuka kamera...');
+                          if (!context.mounted) return;
+                          _showLoadingDialog(context, 'Opening camera...');
                           await ref.read(cameraProvider.notifier).pickImageFromCamera();
-                          if (mounted) {
-                            Navigator.pop(context); // Close loading
-                            if (ref.read(cameraProvider).capturedImage != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const CameraScreen(),
-                                ),
-                              );
-                            } else if (ref.read(cameraProvider).error != null) {
-                              _showErrorDialog(context, ref.read(cameraProvider).error!);
-                            }
+                          if (!context.mounted) return;
+                          Navigator.pop(context); // Close loading
+                          if (ref.read(cameraProvider).capturedImage != null) {
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CameraScreen(),
+                              ),
+                            );
+                          } else if (ref.read(cameraProvider).error != null) {
+                            if (!context.mounted) return;
+                            _showErrorDialog(context, ref.read(cameraProvider).error!);
                           }
                         },
                       ),
@@ -317,7 +354,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       delay: const Duration(milliseconds: 400),
                       child: _ModernActionButton(
                         icon: Icons.videocam_rounded,
-                        label: 'Deteksi Langsung',
+                        label: 'Live Detection',
                         isTertiary: true,
                         onTap: () {
                           Navigator.push(
@@ -336,6 +373,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 32),
             ],
           ),
+        ),
+          ],
         ),
       ),
     );
@@ -384,7 +423,7 @@ class _ModernActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: shadowColor.withOpacity(0.2),
+            color: shadowColor.withValues(alpha: 0.2),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),

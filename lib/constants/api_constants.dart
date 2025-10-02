@@ -1,10 +1,12 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ApiConstants {
   // MealDB API
   static const String mealDbBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
   static const String searchEndpoint = '/search.php';
 
-  // Gemini API - User should add their own key
-  static const String geminiApiKey = 'AIzaSyBTPoJstho2_1yucB4p7B7R2l5Wz_x1_gw';
+  // Gemini API - Loaded from .env file
+  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
   // Model paths
   static const String modelFileName = 'food_classifier.tflite';
@@ -15,5 +17,5 @@ class ApiConstants {
 
   // Inference settings
   static const int inputSize = 224;
-  static const double confidenceThreshold = 0.5;
+  static const double confidenceThreshold = 0.6;
 }

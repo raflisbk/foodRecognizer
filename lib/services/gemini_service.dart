@@ -13,14 +13,14 @@ class GeminiService {
   factory GeminiService() => _instance;
   GeminiService._internal() {
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       apiKey: ApiConstants.geminiApiKey,
     );
   }
 
   Future<NutritionInfo?> getNutritionInfo(String foodName) async {
     try {
-      _logger.i('Getting nutrition info for: $foodName');
+      _logger.i('[Gemini] Requesting nutrition info for: $foodName');
 
       final prompt = '''
 Provide detailed nutritional information for "$foodName" in JSON format.
@@ -42,12 +42,16 @@ Important:
 ''';
 
       final content = [Content.text(prompt)];
+      _logger.i('[Gemini] Sending request to Gemini API');
       final response = await _model.generateContent(content);
 
       if (response.text == null || response.text!.isEmpty) {
-        _logger.w('Empty response from Gemini API');
-        return null;
+        _logger.w('[Gemini] ERROR: Empty response from Gemini API');
+        _logger.i('[Gemini] Using fallback nutrition data');
+        return _getFallbackNutrition(foodName);
       }
+
+      _logger.i('[Gemini] Response received, parsing JSON data');
 
       // Extract JSON from response
       String jsonText = response.text!.trim();
@@ -67,10 +71,11 @@ Important:
       final jsonData = json.decode(jsonText) as Map<String, dynamic>;
       final nutritionInfo = NutritionInfo.fromJson(jsonData);
 
-      _logger.i('Successfully retrieved nutrition info');
+      _logger.i('[Gemini] SUCCESS: Nutrition info retrieved successfully');
       return nutritionInfo;
     } catch (e) {
-      _logger.e('Error getting nutrition info: $e');
+      _logger.e('[Gemini] ERROR: Failed to get nutrition info - $e');
+      _logger.i('[Gemini] Using fallback nutrition data');
       return _getFallbackNutrition(foodName);
     }
   }

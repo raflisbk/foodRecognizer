@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_theme.dart';
 import '../models/food_prediction.dart';
 import '../providers/prediction_provider.dart';
@@ -70,7 +69,7 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                       ),
                     ),
@@ -165,7 +164,7 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppTheme.errorColor.withOpacity(0.1),
+                              color: AppTheme.errorColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Row(
@@ -225,7 +224,7 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Colors.grey.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Row(

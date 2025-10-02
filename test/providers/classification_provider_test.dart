@@ -1,63 +1,16 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:food_recognizer/providers/classification_provider.dart';
 import 'package:food_recognizer/services/image_classification_service.dart';
 import 'package:food_recognizer/services/firebase_ml_service.dart';
 import 'package:food_recognizer/models/food_prediction.dart';
 
-@GenerateMocks([ImageClassificationService, FirebaseMLService, File])
+@GenerateMocks([ImageClassificationService, FirebaseMLService])
 class MockImageClassificationService extends Mock implements ImageClassificationService {}
 class MockFirebaseMLService extends Mock implements FirebaseMLService {}
-
-// Setup Firebase Mock
-void setupFirebaseMocks() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  FirebaseCorePlatform.instance = FakeFirebaseCorePlatform();
-}
-
-class FakeFirebaseCorePlatform extends FirebaseCorePlatform {
-  @override
-  FirebaseAppPlatform app([String name = defaultFirebaseAppName]) {
-    return FakeFirebaseApp();
-  }
-
-  @override
-  Future<FirebaseAppPlatform> initializeApp({
-    String? name,
-    FirebaseOptions? options,
-  }) async {
-    return FakeFirebaseApp();
-  }
-
-  @override
-  List<FirebaseAppPlatform> get apps => [FakeFirebaseApp()];
-}
-
-class FakeFirebaseApp extends FirebaseAppPlatform {
-  FakeFirebaseApp() : super(defaultFirebaseAppName, const FirebaseOptions(
-    apiKey: 'test',
-    appId: 'test',
-    messagingSenderId: 'test',
-    projectId: 'test',
-  ));
-
-  @override
-  Future<void> delete() async {}
-
-  @override
-  bool get isAutomaticDataCollectionEnabled => false;
-
-  @override
-  Future<void> setAutomaticDataCollectionEnabled(bool enabled) async {}
-
-  @override
-  Future<void> setAutomaticResourceManagementEnabled(bool enabled) async {}
-}
 
 void main() {
   group('ClassificationProvider Tests', () {
@@ -66,7 +19,7 @@ void main() {
     late ProviderContainer container;
 
     setUp(() {
-      setupFirebaseMocks();
+      TestWidgetsFlutterBinding.ensureInitialized();
       mockClassificationService = MockImageClassificationService();
       mockFirebaseMLService = MockFirebaseMLService();
 

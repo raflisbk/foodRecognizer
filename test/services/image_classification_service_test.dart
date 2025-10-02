@@ -1,11 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:food_recognizer/services/image_classification_service.dart';
 import 'package:food_recognizer/models/food_prediction.dart';
-
-@GenerateMocks([ImageClassificationService])
 void main() {
   group('ImageClassificationService Tests', () {
     late ImageClassificationService service;

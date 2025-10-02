@@ -90,16 +90,32 @@ class CameraService {
 
   Future<void> stopImageStream() async {
     if (_controller == null || !_controller!.value.isInitialized) {
+      _logger.i('[CameraService] Controller not initialized, nothing to stop');
       return;
     }
 
     try {
       if (_controller!.value.isStreamingImages) {
-        await _controller!.stopImageStream();
-        _logger.i('Image stream stopped');
+        _logger.i('[CameraService] Stopping image stream...');
+
+        // Stop the stream with timeout to prevent hanging
+        await _controller!.stopImageStream().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            _logger.w('[CameraService] WARNING: Stop image stream timed out after 2s');
+          },
+        );
+
+        _logger.i('[CameraService] Image stream stopped successfully');
+
+        // Give the camera a moment to clean up buffers
+        await Future.delayed(const Duration(milliseconds: 100));
+      } else {
+        _logger.i('[CameraService] Image stream was not running');
       }
     } catch (e) {
-      _logger.e('Error stopping image stream: $e');
+      _logger.e('[CameraService] ERROR: Failed to stop image stream - $e');
+      // Continue anyway to allow dispose to proceed
     }
   }
 
