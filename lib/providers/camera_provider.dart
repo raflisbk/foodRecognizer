@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../services/camera_service.dart';
+import '../screens/crop_screen.dart';
 
 final cameraServiceProvider = Provider<CameraService>((ref) {
   return CameraService();
@@ -321,29 +322,21 @@ class CameraNotifier extends StateNotifier<CameraState> {
     }
   }
 
-  Future<void> cropImage() async {
-    if (state.capturedImage == null) return;
+  Future<File?> cropImage(BuildContext context) async {
+    if (state.capturedImage == null) return null;
 
     try {
       debugPrint('[FoodRecognizer] Opening image crop editor...');
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: state.capturedImage!.path,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Edit Image',
-            toolbarColor: Color(0xFFFF6B6B),
-            toolbarWidgetColor: Color(0xFFFFFFFF),
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-          ),
-          IOSUiSettings(
-            title: 'Edit Image',
-            minimumAspectRatio: 1.0,
-          ),
-        ],
+
+      // Navigate ke CropScreen untuk crop image dengan SafeArea yang proper
+      final croppedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CropScreen(imageFile: state.capturedImage!),
+        ),
       );
 
-      if (croppedFile != null) {
+      if (croppedFile != null && croppedFile.path != state.capturedImage!.path) {
         debugPrint('[FoodRecognizer] Image cropped successfully');
 
         // Log analytics event for image cropping
@@ -352,13 +345,15 @@ class CameraNotifier extends StateNotifier<CameraState> {
           parameters: {'success': true},
         );
 
-        state = state.copyWith(capturedImage: File(croppedFile.path));
+        state = state.copyWith(capturedImage: croppedFile);
+        return croppedFile;
       } else {
         debugPrint('[FoodRecognizer] Crop canceled, using original image');
+        return state.capturedImage;
       }
     } catch (e) {
-      debugPrint('[FoodRecognizer] Failed to crop image, continue with original');
-      // No need to set error, let user continue without crop
+      debugPrint('[FoodRecognizer] Failed to crop image, continue with original: $e');
+      return state.capturedImage;
     }
   }
 

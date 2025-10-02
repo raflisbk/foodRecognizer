@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -6,9 +7,28 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import '../constants/api_constants.dart';
 import '../models/food_prediction.dart';
 
+// Data class untuk mengirim data ke isolate
+class _IsolateInferenceData {
+  final Uint8List imageBytes;
+  final String modelPath;
+  final bool isAssetModel;
+  final List<String> labels;
+  final SendPort sendPort;
+
+  _IsolateInferenceData({
+    required this.imageBytes,
+    required this.modelPath,
+    required this.isAssetModel,
+    required this.labels,
+    required this.sendPort,
+  });
+}
+
 class ImageClassificationService {
   Interpreter? _interpreter;
   List<String> _labels = [];
+  String? _currentModelPath;
+  bool _isAssetModel = true;
 
   // Singleton pattern
   static final ImageClassificationService _instance =
@@ -32,11 +52,15 @@ class ImageClassificationService {
         final modelFile = File(modelPath);
         // ignore: await_only_futures
         _interpreter = await Interpreter.fromFile(modelFile);
+        _currentModelPath = modelPath;
+        _isAssetModel = false;
         debugPrint('[FoodRecognizer] Cloud AI model loaded successfully');
       } else {
         // Load from assets
         // ignore: await_only_futures
         _interpreter = await Interpreter.fromAsset('assets/models/${ApiConstants.modelFileName}');
+        _currentModelPath = 'assets/models/${ApiConstants.modelFileName}';
+        _isAssetModel = true;
         debugPrint('[FoodRecognizer] Local AI model loaded successfully');
       }
 
@@ -48,54 +72,96 @@ class ImageClassificationService {
   }
 
   Future<FoodPrediction?> classifyImage(Uint8List imageBytes) async {
-    if (_interpreter == null) {
+    if (_interpreter == null || _currentModelPath == null) {
       debugPrint('[FoodRecognizer] AI model not ready, please wait');
       return null;
     }
 
     try {
-      debugPrint('[FoodRecognizer] Analyzing image...');
+      debugPrint('[FoodRecognizer] Starting image analysis in background thread...');
+
+      // Buat ReceivePort untuk komunikasi dengan isolate
+      final receivePort = ReceivePort();
+
+      // Spawn isolate untuk menjalankan inferensi di background
+      await Isolate.spawn(
+        _runInferenceInIsolate,
+        _IsolateInferenceData(
+          imageBytes: imageBytes,
+          modelPath: _currentModelPath!,
+          isAssetModel: _isAssetModel,
+          labels: _labels,
+          sendPort: receivePort.sendPort,
+        ),
+      );
+
+      // Tunggu hasil dari isolate
+      final result = await receivePort.first;
+
+      if (result is FoodPrediction) {
+        debugPrint('[FoodRecognizer] Background analysis completed successfully');
+        return result;
+      } else if (result is String) {
+        debugPrint('[FoodRecognizer] Background analysis failed: $result');
+        return null;
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('[FoodRecognizer] Failed to analyze image: $e');
+      return null;
+    }
+  }
+
+  // Static method untuk dijalankan di isolate
+  static Future<void> _runInferenceInIsolate(_IsolateInferenceData data) async {
+    try {
+      // Load interpreter di isolate
+      Interpreter interpreter;
+      if (data.isAssetModel) {
+        // ignore: await_only_futures
+        interpreter = await Interpreter.fromAsset(data.modelPath);
+      } else {
+        final modelFile = File(data.modelPath);
+        // ignore: await_only_futures
+        interpreter = await Interpreter.fromFile(modelFile);
+      }
 
       // Decode image
-      img.Image? image = img.decodeImage(imageBytes);
+      img.Image? image = img.decodeImage(data.imageBytes);
       if (image == null) {
-        debugPrint('[FoodRecognizer] Failed to read image');
-        return null;
+        data.sendPort.send('Failed to decode image');
+        return;
       }
 
       // Preprocess image
       final inputImage = _preprocessImage(image);
 
       // Get output shape and quantization parameters from model
-      final outputTensor = _interpreter!.getOutputTensor(0);
+      final outputTensor = interpreter.getOutputTensor(0);
       final outputShape = outputTensor.shape;
       final numClasses = outputShape[1];
 
-      // Check if model is quantized by checking quantization parameters
+      // Check if model is quantized
       final quantizationParams = outputTensor.params;
       final isQuantized = quantizationParams.scale != 0.0;
 
       // Prepare output buffer based on model type
       dynamic output;
       if (isQuantized) {
-        // For quantized models, use uint8 buffer
         output = List.filled(1 * numClasses, 0).reshape([1, numClasses]);
       } else {
-        // For float models, use double buffer
         output = List.filled(1 * numClasses, 0.0).reshape([1, numClasses]);
       }
 
       // Run inference
-      _interpreter!.run(inputImage, output);
+      interpreter.run(inputImage, output);
 
       // Get results and dequantize if needed
       List<double> predictions;
       if (isQuantized) {
-        // Dequantize: output = (quantized_value - zero_point) * scale
-        // For this model: scale = 0.00390625, zero_point = 0
         final scale = quantizationParams.scale;
         final zeroPoint = quantizationParams.zeroPoint;
-
         final quantizedOutput = output[0] as List<int>;
         predictions = quantizedOutput.map((q) => (q - zeroPoint) * scale).toList();
       } else {
@@ -113,44 +179,40 @@ class ImageClassificationService {
         }
       }
 
-      if (maxConfidence < ApiConstants.confidenceThreshold) {
-        final confidencePercent = (maxConfidence * 100).toStringAsFixed(1);
-        debugPrint('[FoodRecognizer] Confidence level too low: $confidencePercent%');
-        debugPrint('[FoodRecognizer] Threshold: ${(ApiConstants.confidenceThreshold * 100).toStringAsFixed(0)}%');
+      // Close interpreter
+      interpreter.close();
 
-        // Return prediction with special low confidence flag
-        // We'll use a negative confidence to signal low confidence to the provider
+      // Check confidence threshold
+      if (maxConfidence < ApiConstants.confidenceThreshold) {
         final prediction = FoodPrediction(
-          label: _labels.length > maxIndex ? _labels[maxIndex] : 'Unknown',
+          label: data.labels.length > maxIndex ? data.labels[maxIndex] : 'Unknown',
           confidence: -maxConfidence, // Negative to signal low confidence
           timestamp: DateTime.now(),
         );
-        return prediction;
+        data.sendPort.send(prediction);
+        return;
       }
 
       // Check if maxIndex is within labels bounds
-      if (maxIndex >= _labels.length) {
-        debugPrint('[FoodRecognizer] Prediction index ($maxIndex) exceeds label count (${_labels.length})');
-        debugPrint('[FoodRecognizer] Using "Unknown Food" label for out-of-range index');
+      if (maxIndex >= data.labels.length) {
         final prediction = FoodPrediction(
           label: 'Unknown Food (Class $maxIndex)',
           confidence: maxConfidence,
           timestamp: DateTime.now(),
         );
-        return prediction;
+        data.sendPort.send(prediction);
+        return;
       }
 
       final prediction = FoodPrediction(
-        label: _labels[maxIndex],
+        label: data.labels[maxIndex],
         confidence: maxConfidence,
         timestamp: DateTime.now(),
       );
 
-      debugPrint('[FoodRecognizer] Detected: ${_labels[maxIndex]} (${(maxConfidence * 100).toStringAsFixed(1)}%)');
-      return prediction;
+      data.sendPort.send(prediction);
     } catch (e) {
-      debugPrint('[FoodRecognizer] Failed to analyze image: $e');
-      return null;
+      data.sendPort.send('Error in isolate: $e');
     }
   }
 

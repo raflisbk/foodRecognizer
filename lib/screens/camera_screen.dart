@@ -31,7 +31,7 @@ class CameraScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.crop, color: Colors.white),
               onPressed: () async {
-                await ref.read(cameraProvider.notifier).cropImage();
+                await ref.read(cameraProvider.notifier).cropImage(context);
               },
             ),
         ],

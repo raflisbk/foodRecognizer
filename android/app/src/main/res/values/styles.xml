@@ -19,4 +19,18 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+
+    <!-- Custom theme for UCrop activity to handle status bar properly -->
+    <style name="UCropTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Enable drawing behind system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!-- Set status bar color -->
+        <item name="android:statusBarColor">#FF6B6B</item>
+        <!-- Use light status bar icons on colored background -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Ensure content fits below system bars -->
+        <item name="android:fitsSystemWindows">true</item>
+        <!-- Handle display cutout (notch) -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
 </resources>
