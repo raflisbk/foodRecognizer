@@ -1,11 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:logger/logger.dart';
 import '../constants/api_constants.dart';
 import '../models/nutrition_info.dart';
 import 'dart:convert';
 
 class GeminiService {
-  static final Logger _logger = Logger();
   late final GenerativeModel _model;
 
   // Singleton pattern
@@ -20,7 +19,7 @@ class GeminiService {
 
   Future<NutritionInfo?> getNutritionInfo(String foodName) async {
     try {
-      _logger.i('[Gemini] Requesting nutrition info for: $foodName');
+      debugPrint('[Gemini] Requesting nutrition info for: $foodName');
 
       final prompt =
           '''
@@ -43,16 +42,16 @@ Important:
 ''';
 
       final content = [Content.text(prompt)];
-      _logger.i('[Gemini] Sending request to Gemini API');
+      debugPrint('[Gemini] Sending request to Gemini API');
       final response = await _model.generateContent(content);
 
       if (response.text == null || response.text!.isEmpty) {
-        _logger.w('[Gemini] ERROR: Empty response from Gemini API');
-        _logger.i('[Gemini] Using fallback nutrition data');
+        debugPrint('[Gemini] ERROR: Empty response from Gemini API');
+        debugPrint('[Gemini] Using fallback nutrition data');
         return _getFallbackNutrition(foodName);
       }
 
-      _logger.i('[Gemini] Response received, parsing JSON data');
+      debugPrint('[Gemini] Response received, parsing JSON data');
 
       // Extract JSON from response
       String jsonText = response.text!.trim();
@@ -72,11 +71,12 @@ Important:
       final jsonData = json.decode(jsonText) as Map<String, dynamic>;
       final nutritionInfo = NutritionInfo.fromJson(jsonData);
 
-      _logger.i('[Gemini] SUCCESS: Nutrition info retrieved successfully');
+      debugPrint('[Gemini] SUCCESS: Nutrition info retrieved successfully');
+      debugPrint('[Gemini] Calories: ${nutritionInfo.calories}');
       return nutritionInfo;
     } catch (e) {
-      _logger.e('[Gemini] ERROR: Failed to get nutrition info - $e');
-      _logger.i('[Gemini] Using fallback nutrition data');
+      debugPrint('[Gemini] ERROR: Failed to get nutrition info - $e');
+      debugPrint('[Gemini] Using fallback nutrition data');
       return _getFallbackNutrition(foodName);
     }
   }
@@ -96,6 +96,7 @@ Important:
 
   Future<String?> getFoodDescription(String foodName) async {
     try {
+      debugPrint('[Gemini] Requesting food description for: $foodName');
       final prompt =
           '''
 Provide a brief, interesting description of "$foodName" in 2-3 sentences.
@@ -106,9 +107,10 @@ Keep it concise and engaging.
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
 
+      debugPrint('[Gemini] Food description retrieved successfully');
       return response.text;
     } catch (e) {
-      _logger.e('Error getting food description: $e');
+      debugPrint('[Gemini] ERROR: Failed to get food description - $e');
       return null;
     }
   }

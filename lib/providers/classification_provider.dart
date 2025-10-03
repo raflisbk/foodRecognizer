@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../constants/api_constants.dart';
 import '../models/food_prediction.dart';
@@ -67,7 +66,6 @@ class ClassificationState {
 class ClassificationNotifier extends StateNotifier<ClassificationState> {
   final ImageClassificationService _classificationService;
   final FirebaseMLService _firebaseMLService;
-  final Logger _logger = Logger();
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   ClassificationNotifier(this._classificationService, this._firebaseMLService)
@@ -144,21 +142,27 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
         '[ClassificationProvider] State updated: isInitialized=${state.isInitialized}, isLoading=${state.isLoading}',
       );
     } on FileSystemException catch (fileError) {
-      _logger.e('File system error: $fileError');
+      debugPrint(
+        '[ClassificationProvider] ERROR: File system error - $fileError',
+      );
       state = state.copyWith(
         isLoading: false,
         error:
             'Failed to access AI model file. Ensure app has sufficient storage permissions.',
       );
     } on PlatformException catch (platformError) {
-      _logger.e('Platform error: $platformError');
+      debugPrint(
+        '[ClassificationProvider] ERROR: Platform error - $platformError',
+      );
       state = state.copyWith(
         isLoading: false,
         error:
             'System error: ${platformError.message ?? "Unknown"}. Please restart the app.',
       );
     } catch (e) {
-      _logger.e('Error initializing classification: $e');
+      debugPrint(
+        '[ClassificationProvider] ERROR: Failed to initialize classification - $e',
+      );
       String errorMessage;
       if (e.toString().contains('OutOfMemory')) {
         errorMessage =
@@ -211,8 +215,8 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
               -prediction.confidence; // Convert back to positive
           final confidencePercent = (actualConfidence * 100).toStringAsFixed(1);
 
-          _logger.w(
-            '[ClassificationProvider] Low confidence detection: ${prediction.label} ($confidencePercent%)',
+          debugPrint(
+            '[ClassificationProvider] WARNING: Low confidence detection - ${prediction.label} ($confidencePercent%)',
           );
 
           state = state.copyWith(
@@ -255,19 +259,21 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
         );
       }
     } on FileSystemException catch (e) {
-      _logger.e('File system error: $e');
+      debugPrint('[ClassificationProvider] ERROR: File system error - $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to read image file. Please try again.',
       );
     } on FormatException catch (e) {
-      _logger.e('Format error: $e');
+      debugPrint('[ClassificationProvider] ERROR: Format error - $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Image format not supported. Use JPG, PNG, or WEBP format.',
       );
     } catch (e) {
-      _logger.e('Error classifying image: $e');
+      debugPrint(
+        '[ClassificationProvider] ERROR: Failed to classify image - $e',
+      );
       String errorMessage;
       if (e.toString().contains('OutOfMemory')) {
         errorMessage = 'Insufficient memory. Try using a smaller image.';
@@ -293,8 +299,8 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
           final actualConfidence = -prediction.confidence;
           final confidencePercent = (actualConfidence * 100).toStringAsFixed(1);
 
-          _logger.w(
-            '[ClassificationProvider] Low confidence in live stream: ${prediction.label} ($confidencePercent%)',
+          debugPrint(
+            '[ClassificationProvider] WARNING: Low confidence in live stream - ${prediction.label} ($confidencePercent%)',
           );
 
           // For live detection, we just skip low confidence without showing error
@@ -314,7 +320,9 @@ class ClassificationNotifier extends StateNotifier<ClassificationState> {
         );
       }
     } catch (e) {
-      _logger.e('Error classifying image bytes: $e');
+      debugPrint(
+        '[ClassificationProvider] ERROR: Failed to classify image bytes - $e',
+      );
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

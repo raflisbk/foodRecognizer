@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -56,7 +55,6 @@ class CameraState {
 
 class CameraNotifier extends StateNotifier<CameraState> {
   final CameraService _cameraService;
-  final Logger _logger = Logger();
   final ImagePicker _imagePicker = ImagePicker();
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
@@ -70,7 +68,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         error: success ? null : 'Failed to initialize camera',
       );
     } catch (e) {
-      _logger.e('Error initializing camera: $e');
+      debugPrint('[CameraProvider] ERROR: Failed to initialize camera - $e');
       state = state.copyWith(error: e.toString());
     }
   }
@@ -82,7 +80,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         state = state.copyWith(capturedImage: File(image.path));
       }
     } catch (e) {
-      _logger.e('Error taking picture: $e');
+      debugPrint('[CameraProvider] ERROR: Failed to take picture - $e');
       state = state.copyWith(error: e.toString());
     }
   }
@@ -431,7 +429,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       await _cameraService.startImageStream(onImage);
       state = state.copyWith(isStreaming: true);
     } catch (e) {
-      _logger.e('Error starting stream: $e');
+      debugPrint('[CameraProvider] ERROR: Failed to start image stream - $e');
       state = state.copyWith(error: e.toString());
     }
   }
@@ -443,7 +441,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       state = state.copyWith(isStreaming: false);
       debugPrint('[CameraProvider] Camera stream stopped successfully');
     } catch (e) {
-      _logger.e('Error stopping stream: $e');
+      debugPrint('[CameraProvider] ERROR: Failed to stop image stream - $e');
       state = state.copyWith(error: e.toString());
     }
   }

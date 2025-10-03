@@ -1,10 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 import '../constants/api_constants.dart';
 import '../models/meal_detail.dart';
 
 class MealDbService {
-  static final Logger _logger = Logger();
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.mealDbBaseUrl,
@@ -36,7 +35,7 @@ class MealDbService {
   /// Returns up to 5 results, all sorted from most to least relevant.
   Future<List<MealDetail>> searchMealByName(String name) async {
     try {
-      _logger.i('[MealDB] Step 1: Searching meals with full name: $name');
+      debugPrint('[MealDB] Step 1: Searching meals with full name: $name');
 
       // First try: exact/partial match
       var response = await _dio.get(
@@ -54,18 +53,18 @@ class MealDbService {
 
           // Sort by relevance: prioritize meals that contain more keywords from the search
           final sortedMeals = _sortByRelevance(mealList, name);
-          _logger.i(
+          debugPrint(
             '[MealDB] Step 1 SUCCESS: Found ${sortedMeals.length} meals with full name',
           );
-          _logger.i(
+          debugPrint(
             '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
           );
 
           // Log top 3 results if available
           if (sortedMeals.length > 1) {
-            _logger.i('[MealDB] Result ranking:');
+            debugPrint('[MealDB] Result ranking:');
             for (var i = 0; i < sortedMeals.length && i < 3; i++) {
-              _logger.i('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
+              debugPrint('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
             }
           }
 
@@ -74,8 +73,10 @@ class MealDbService {
       }
 
       // Step 2: Try searching with each word and combine results
-      _logger.i('[MealDB] Step 1 FAILED: No exact match found');
-      _logger.i('[MealDB] Step 2: Searching with individual words from: $name');
+      debugPrint('[MealDB] Step 1 FAILED: No exact match found');
+      debugPrint(
+        '[MealDB] Step 2: Searching with individual words from: $name',
+      );
 
       final searchWords = name.toLowerCase().split(' ');
       final allMeals =
@@ -84,7 +85,7 @@ class MealDbService {
       for (var word in searchWords) {
         if (word.length < 3) continue; // Skip very short words
 
-        _logger.i('[MealDB] Step 2: Trying search with word: $word');
+        debugPrint('[MealDB] Step 2: Trying search with word: $word');
 
         try {
           response = await _dio.get(
@@ -103,13 +104,13 @@ class MealDbService {
                 allMeals[meal.id] =
                     meal; // Add to map, automatically handles duplicates
               }
-              _logger.i(
+              debugPrint(
                 '[MealDB] Step 2: Found ${meals.length} meals with word "$word"',
               );
             }
           }
         } catch (e) {
-          _logger.w('[MealDB] Step 2: Failed to search with word "$word": $e');
+          debugPrint('[MealDB] Step 2: Failed to search with word "$word": $e');
           continue;
         }
       }
@@ -118,18 +119,18 @@ class MealDbService {
         final mealList = allMeals.values.toList();
         // Sort by relevance to the original search term
         final sortedMeals = _sortByRelevance(mealList, name);
-        _logger.i(
+        debugPrint(
           '[MealDB] Step 2 SUCCESS: Found total ${sortedMeals.length} unique meals',
         );
-        _logger.i(
+        debugPrint(
           '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
         );
 
         // Log top 3 results if available
         if (sortedMeals.length > 1) {
-          _logger.i('[MealDB] Result ranking:');
+          debugPrint('[MealDB] Result ranking:');
           for (var i = 0; i < sortedMeals.length && i < 3; i++) {
-            _logger.i('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
+            debugPrint('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
           }
         }
 
@@ -139,12 +140,14 @@ class MealDbService {
       }
 
       // Step 3: Final fallback with main ingredient keyword
-      _logger.i('[MealDB] Step 2 FAILED: No meals found with individual words');
-      _logger.i('[MealDB] Step 3: Extracting main ingredient keyword');
+      debugPrint(
+        '[MealDB] Step 2 FAILED: No meals found with individual words',
+      );
+      debugPrint('[MealDB] Step 3: Extracting main ingredient keyword');
       final bestKeyword = _extractMostRelevantKeyword(name);
 
       if (bestKeyword != null && !searchWords.contains(bestKeyword)) {
-        _logger.i('[MealDB] Step 3: Trying main ingredient: "$bestKeyword"');
+        debugPrint('[MealDB] Step 3: Trying main ingredient: "$bestKeyword"');
 
         response = await _dio.get(
           ApiConstants.searchEndpoint,
@@ -162,18 +165,18 @@ class MealDbService {
                 .toList();
 
             final sortedMeals = _sortByRelevance(mealList, name);
-            _logger.i(
+            debugPrint(
               '[MealDB] Step 3 SUCCESS: Found ${sortedMeals.length} meals with main ingredient',
             );
-            _logger.i(
+            debugPrint(
               '[MealDB] Top result (most relevant): ${sortedMeals.first.name}',
             );
 
             // Log top 3 results if available
             if (sortedMeals.length > 1) {
-              _logger.i('[MealDB] Result ranking:');
+              debugPrint('[MealDB] Result ranking:');
               for (var i = 0; i < sortedMeals.length && i < 3; i++) {
-                _logger.i('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
+                debugPrint('[MealDB]   ${i + 1}. ${sortedMeals[i].name}');
               }
             }
 
@@ -181,18 +184,18 @@ class MealDbService {
           }
         }
 
-        _logger.w(
+        debugPrint(
           '[MealDB] Step 3 FAILED: No meals found with main ingredient: $bestKeyword',
         );
       }
 
-      _logger.w('[MealDB] FINAL RESULT: No meals found for: $name');
+      debugPrint('[MealDB] FINAL RESULT: No meals found for: $name');
       return [];
     } on DioException catch (e) {
-      _logger.e('[MealDB] ERROR: Network error - ${e.message}');
+      debugPrint('[MealDB] ERROR: Network error - ${e.message}');
       return [];
     } catch (e) {
-      _logger.e('[MealDB] ERROR: Unexpected error - $e');
+      debugPrint('[MealDB] ERROR: Unexpected error - $e');
       return [];
     }
   }
@@ -381,7 +384,7 @@ class MealDbService {
 
   Future<MealDetail?> getMealById(String id) async {
     try {
-      _logger.i('Getting meal by ID: $id');
+      debugPrint('[MealDB] Getting meal by ID: $id');
 
       final response = await _dio.get(
         '/lookup.php',
@@ -392,18 +395,21 @@ class MealDbService {
         final meals = response.data['meals'] as List<dynamic>?;
 
         if (meals == null || meals.isEmpty) {
+          debugPrint('[MealDB] No meal found with ID: $id');
           return null;
         }
 
-        return MealDetail.fromJson(meals[0] as Map<String, dynamic>);
+        final meal = MealDetail.fromJson(meals[0] as Map<String, dynamic>);
+        debugPrint('[MealDB] Meal found: ${meal.name}');
+        return meal;
       }
 
       return null;
     } on DioException catch (e) {
-      _logger.e('Dio error getting meal: ${e.message}');
+      debugPrint('[MealDB] ERROR: Dio error getting meal - ${e.message}');
       return null;
     } catch (e) {
-      _logger.e('Error getting meal: $e');
+      debugPrint('[MealDB] ERROR: Failed to get meal - $e');
       return null;
     }
   }
